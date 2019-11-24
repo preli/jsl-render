@@ -17,6 +17,9 @@ export function h(componentOrTag: string | IJSLComponent, attr, ...children) {
             for (const child of children) {
                 if (Array.isArray(child)) {
                     child.map((c) => result.children.push(c));
+                } else if (child != null && child.tag === undefined) {
+                    // TODO: this is not what React does -> needs to change in future version
+                    result.children.push({tag: "span", content: child.toString()});
                 } else {
                     result.children.push(child);
                 }
