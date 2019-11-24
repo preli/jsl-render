@@ -1,0 +1,16 @@
+{
+  "name": "jsl-render",
+  "version": "2.0.2",
+  "description": "virtual dom render engine",
+  "main": "lib/index.js",
+  "files": ["lib/**/*"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "Philipp P.",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^3.6.3"
+  }
+}
