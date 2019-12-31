@@ -18,8 +18,10 @@ export class JSLRender {
 
     private repaintScheduled = false;
 
-    constructor(private container: HTMLElement) {
-        lastCreatedRenderer = this;
+    constructor(private container: HTMLElement, globalRefresh?: boolean) {
+        if (globalRefresh) {
+            lastCreatedRenderer = this;
+        }
     }
 
     public render(node?: IJSLVNode | IJSLComponent): void {
