@@ -61,7 +61,7 @@ export class JSLRender {
         const isComponent = this.isComponent(node);
         if (isComponent) {
             // we have a component
-            if (replaceWith == null && (node as IJSLComponent).onInit) {
+            if ((node as IJSLComponent).onInit) { // if (replaceWith == null && (node as IJSLComponent).onInit) {
                 (node as IJSLComponent).onInit.call(node, this);
             }
             vnode = (node as IJSLComponent).render();
