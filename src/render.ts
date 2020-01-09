@@ -174,6 +174,8 @@ export class JSLRender {
         if (!this.areAttributesEqual(renderedNode, vnode)) {
             this.updateAttributes(renderedNode, vnode, node);
             attributesChanged = true;
+        } else {
+            this.refreshHandlers(renderedNode, vnode, node);
         }
 
         const contentChanged = this.updateContent(renderedNode, vnode);
@@ -181,6 +183,19 @@ export class JSLRender {
             (node as IJSLComponent).onUpdate.call(node, vnode);
         }
         return vnode;
+    }
+
+
+    private refreshHandlers(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
+        for (const attr in vnode.attr) {
+            if (isFnc(vnode.attr[attr]) &&
+                renderedNode.attr[attr] !== vnode.attr[attr]) {
+                if (renderedNode.dom["_" + attr + "_"] != null) {
+                    renderedNode.dom.removeEventListener(attr, renderedNode.dom["_" + attr + "_"]);
+                }
+                this.setAttribute(vnode, node, attr);
+            }
+        }
     }
 
     private updateContent(renderedNode: IJSLVNode, vnode: IJSLVNode): boolean {
@@ -215,6 +230,7 @@ export class JSLRender {
                 if (isFnc(renderedNode.attr[oldAttr]) &&
                     renderedNode.attr[oldAttr] !== vnode.attr[oldAttr]) {
                     renderedNode.dom.removeEventListener(oldAttr, renderedNode.dom["_" + oldAttr + "_"]);
+                    renderedNode.dom["_" + oldAttr + "_"] = undefined;
                 } else {
                     if (vnode.attr[oldAttr] === undefined) {
                         renderedNode.dom.removeAttribute(oldAttr);
@@ -284,7 +300,7 @@ export class JSLRender {
             if (nodeA.attr.hasOwnProperty(attribute)) {
                 if (nodeB.attr.hasOwnProperty(attribute)) {
                     if ((!isFnc(nodeA.attr[attribute]) || !isFnc(nodeB.attr[attribute])) // both values are a function (handlers)-> no need to update
-                    && nodeA.attr[attribute] !== nodeB.attr[attribute]) {
+                        && nodeA.attr[attribute] !== nodeB.attr[attribute]) {
                         return false;
                     }
                 } else {
