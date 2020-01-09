@@ -10,6 +10,10 @@ export function refresh() {
     }
 }
 
+function isFnc(f: any): boolean {
+    return typeof f === "function";
+}
+
 export class JSLRender {
 
     private renderedVNode: IJSLVNode;
@@ -73,7 +77,7 @@ export class JSLRender {
         const dom = vnode.dom = document.createElement(vnode.tag);
         for (const attr in vnode.attr) {
             if (vnode.attr.hasOwnProperty(attr)) {
-                this.setAttribute(vnode, node, attr, vnode.attr[attr]);
+                this.setAttribute(vnode, node, attr);
             }
         }
         if (vnode.children.length > 0) {
@@ -123,7 +127,7 @@ export class JSLRender {
     }
 
     private isComponent(node: IJSLVNode | IJSLComponent): boolean {
-        return typeof (node as any).render === "function";
+        return isFnc((node as any).render);
     }
 
     private updateNode(renderedNode: IJSLVNode, node: IJSLVNode | IJSLComponent): IJSLVNode {
@@ -205,10 +209,11 @@ export class JSLRender {
     }
 
     private updateAttributes(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
+        console.log("updateAttributes");
         // clear previous rendered attributes
         for (const oldAttr in renderedNode.attr) {
             if (renderedNode.attr.hasOwnProperty(oldAttr)) {
-                if (typeof renderedNode.attr[oldAttr] === "function" &&
+                if (isFnc(renderedNode.attr[oldAttr]) &&
                     renderedNode.attr[oldAttr] !== vnode.attr[oldAttr]) {
                     renderedNode.dom.removeEventListener(oldAttr, renderedNode.dom["_" + oldAttr + "_"]);
                 } else {
@@ -221,13 +226,13 @@ export class JSLRender {
         // set new attributes
         for (const attr in vnode.attr) {
             if (vnode.attr.hasOwnProperty(attr)) {
-                this.setAttribute(vnode, node, attr, vnode.attr[attr]);
+                this.setAttribute(vnode, node, attr);
             }
         }
     }
 
-    private setAttribute(vnode: IJSLVNode, node: IJSLComponent | IJSLVNode, attr: string, value: any) {
-        if (typeof vnode.attr[attr] === "function") {
+    private setAttribute(vnode: IJSLVNode, node: IJSLComponent | IJSLVNode, attr: string) {
+        if (isFnc(vnode.attr[attr])) {
             const eventHandler = (args) => {
                 let closestComponent = args.currentTarget;
                 let component;
@@ -238,14 +243,14 @@ export class JSLRender {
                         break;
                     }
                 }
-                if (value.call(component || node, args, vnode) !== false) {
+                if (vnode.attr[attr].call(component || node, args, vnode) !== false) {
                     this.refresh();
                 }
             };
             vnode.dom.addEventListener(attr, eventHandler);
             vnode.dom["_" + attr + "_"] = eventHandler;
         } else {
-            vnode.dom.setAttribute(attr, value);
+            vnode.dom.setAttribute(attr, vnode.attr[attr]);
         }
     }
 
@@ -279,7 +284,8 @@ export class JSLRender {
         for (const attribute in nodeA.attr) {
             if (nodeA.attr.hasOwnProperty(attribute)) {
                 if (nodeB.attr.hasOwnProperty(attribute)) {
-                    if (nodeA.attr[attribute] !== nodeB.attr[attribute]) {
+                    if ((!isFnc(nodeA.attr[attribute]) || !isFnc(nodeB.attr[attribute])) // both values are a function (handlers)-> no need to update
+                    && nodeA.attr[attribute] !== nodeB.attr[attribute]) {
                         return false;
                     }
                 } else {
