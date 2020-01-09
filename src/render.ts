@@ -209,7 +209,6 @@ export class JSLRender {
     }
 
     private updateAttributes(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
-        console.log("updateAttributes");
         // clear previous rendered attributes
         for (const oldAttr in renderedNode.attr) {
             if (renderedNode.attr.hasOwnProperty(oldAttr)) {
