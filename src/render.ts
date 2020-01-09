@@ -137,7 +137,8 @@ export class JSLRender {
         if (!node) {
             this.callRemoveEvents(renderedNode, true);
         } else {
-            if ((renderedNode.dom as any)._component && (node as any).__proto__ !== (renderedNode.dom as any)._component.__proto__) {
+            if (((renderedNode.dom as any)._component && (node as any).__proto__ !== (renderedNode.dom as any)._component.__proto__)
+            || (isComponent && (node as any).__proto__ !== (renderedNode.dom as any)._component?.__proto__)) {
                 // different type of component is present -> delete and recreate
                 this.callRemoveEvents(renderedNode, true);
                 const parent = renderedNode.dom.parentElement;
