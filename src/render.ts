@@ -221,6 +221,7 @@ export class JSLRender {
     }
 
     private updateContent(renderedNode: IJSLVNode, vnode: IJSLVNode): boolean {
+        this.tryToReorderChildren(renderedNode, vnode);
         if (renderedNode.children.length !== vnode.children.length ||
             renderedNode.content !== vnode.content) {
             if (vnode.children.length > 0) {
@@ -247,6 +248,37 @@ export class JSLRender {
             }
             vnode.children = newChildren;
             return false;
+        }
+    }
+
+    private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
+
+        function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): number {
+            for (let i = 0; i < children.length; i++) {
+                if ((children[i].dom as any)?._component === component) {
+                    return i;
+                }
+                return -1;
+            }
+        }
+
+        function switchDom(newIdx, oldIdx, node: IJSLVNode): void {
+            // TODO: what if newIdx is outside of bounds of node.dom.children
+            node.dom.children[newIdx].parentNode.insertBefore(node.dom.children[newIdx], node.dom.children[oldIdx]);
+        }
+
+        if (renderedNode.children.length > 0 && vnode.children.length > 0) {
+            for (let idx = 0, l = vnode.children.length; idx < l; idx++) {
+                const c = vnode.children[l];
+                if (isComponent(c)) {
+                    const oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
+                    if (oldCompIdx >= 0) { // found
+                        switchDom(idx, oldCompIdx, renderedNode);
+                    }
+                } else {
+                    // TODO
+                }
+            }
         }
     }
 
