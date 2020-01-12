@@ -14,7 +14,7 @@ export interface IJSLComponent {
 
     render: () => IJSLVNode;
 
-    hasChanged?: () => boolean;
+    isEqual?: (comp: IJSLComponent) => boolean;
 
     /*
      * Executed after a change/update to the virtual dom is detected and the dom

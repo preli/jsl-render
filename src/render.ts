@@ -1,7 +1,5 @@
 import { IJSLComponent, IJSLVNode } from "./interfaces";
 
-// export let KEY_ATTRIBUTE = "_key";
-
 let lastCreatedRenderer: JSLRender = null;
 
 export function refresh() {
@@ -12,6 +10,18 @@ export function refresh() {
 
 function isFnc(f: any): boolean {
     return typeof f === "function";
+}
+
+function isComponent(node: IJSLVNode | IJSLComponent): boolean {
+    return isFnc((node as any).render);
+}
+
+function areEqual(a: IJSLComponent, b: IJSLComponent): boolean {
+    if (b.isEqual != null) {
+        return b.isEqual(a);
+    }
+    return a === b;
+    // return (a as any).__proto__ !== (b as any).__proto__;
 }
 
 export class JSLRender {
@@ -62,8 +72,8 @@ export class JSLRender {
     private createNode(container: HTMLElement, node: IJSLVNode | IJSLComponent, replaceWith?: HTMLElement): IJSLVNode {
         // console.log("createNode");
         let vnode: IJSLVNode;
-        const isComponent = this.isComponent(node);
-        if (isComponent) {
+        const isComp = isComponent(node);
+        if (isComp) {
             // we have a component
             if ((node as IJSLComponent).onInit) { // if (replaceWith == null && (node as IJSLComponent).onInit) {
                 (node as IJSLComponent).onInit.call(node, this);
@@ -93,7 +103,7 @@ export class JSLRender {
                 dom.textContent = vnode.content || "";
             }
         }
-        if (isComponent) {
+        if (isComp) {
             (dom as any)._component = node;
         }
         if (replaceWith != null) {
@@ -102,7 +112,7 @@ export class JSLRender {
         } else {
             container.appendChild(dom);
         }
-        if (isComponent && (node as IJSLComponent).onCreate) {
+        if (isComp && (node as IJSLComponent).onCreate) {
             (node as IJSLComponent).onCreate.call(node, vnode);
         }
         return vnode;
@@ -112,7 +122,7 @@ export class JSLRender {
         return {
             tag: vnode.tag,
             attr: vnode.attr,
-            children: [...(vnode.children || [])],
+            children: (vnode.children || []).slice(),
             dom: vnode.dom,
             raw: vnode.raw,
             content: vnode.content
@@ -120,39 +130,51 @@ export class JSLRender {
     }
 
     private sanitize(vnode: IJSLVNode) {
-        if (!this.isComponent(vnode)) {
+        if (!isComponent(vnode)) {
             vnode.children = (vnode.children || []).filter((c) => c != null);
             vnode.attr = vnode.attr || [];
         }
     }
 
-    private isComponent(node: IJSLVNode | IJSLComponent): boolean {
-        return isFnc((node as any).render);
-    }
-
     private updateNode(renderedNode: IJSLVNode, node: IJSLVNode | IJSLComponent): IJSLVNode {
-        let vnode: IJSLVNode;
-        const isComponent = this.isComponent(node);
+        if (renderedNode.dom.parentElement == null) {
+            // does not exist anymore
+            // -> was probably modified outside of jsl-render code
+            // -> needs to be removed now, so return undefined
+            return;
+        }
+        // if (!node) {
+        //     debugger;
+        //     this.callRemoveEvents(renderedNode, true);
+        //     renderedNode.dom.parentElement.removeChild(renderedNode.dom);
+        //     return;
+        // }
 
-        if (!node) {
-            this.callRemoveEvents(renderedNode, true);
-        } else {
-            if (((renderedNode.dom as any)._component && (node as any).__proto__ !== (renderedNode.dom as any)._component.__proto__)
-            || (isComponent && (node as any).__proto__ !== (renderedNode.dom as any)._component?.__proto__)) {
-                // different type of component is present -> delete and recreate
-                this.callRemoveEvents(renderedNode, true);
-                const parent = renderedNode.dom.parentElement;
-                return this.createNode(parent, node, renderedNode.dom);
+        let vnode: IJSLVNode;
+        const isComp = isComponent(node);
+        {
+            const oldComponent = (renderedNode.dom as any)._component;
+            const isOldNodeAComponent = oldComponent != null;
+            if (isOldNodeAComponent || isComp) {
+                let recreateNode = false;
+                if (!isComp || !isOldNodeAComponent) {
+                    recreateNode = true;
+                } else {
+                    // we had a component in last render cycle and we still have a component
+                    // ... but is it the same component or do we need to recreate it
+                    if (!areEqual(node as IJSLComponent, oldComponent)) {
+                        recreateNode = true;
+                    }
+                }
+                if (recreateNode) {
+                    this.callRemoveEvents(renderedNode, true);
+                    const parent = renderedNode.dom.parentElement;
+                    return this.createNode(parent, node, renderedNode.dom);
+                }
             }
         }
 
-        if (isComponent) {
-            // we have a component
-            if ((node as IJSLComponent).hasChanged) {
-                if (!(node as IJSLComponent).hasChanged.call(node)) {
-                    return renderedNode;
-                }
-            }
+        if (isComp) {
             vnode = (node as IJSLComponent).render();
         } else {
             // we have a vNode
@@ -160,9 +182,9 @@ export class JSLRender {
         }
         this.sanitize(vnode);
         vnode.dom = renderedNode.dom;
-        if (isComponent) {
-            (vnode.dom as any)._component = node;
-        }
+        // if (isComp) {
+            (vnode.dom as any)._component = isComp ? node : undefined;
+        // }
 
         if (renderedNode.tag !== vnode.tag) {
             // tag changed -> delete and recreate
@@ -178,9 +200,8 @@ export class JSLRender {
         } else {
             this.refreshHandlers(renderedNode, vnode, node);
         }
-
         const contentChanged = this.updateContent(renderedNode, vnode);
-        if ((contentChanged || attributesChanged) && isComponent && (node as IJSLComponent).onUpdate) {
+        if ((contentChanged || attributesChanged) && isComp && (node as IJSLComponent).onUpdate) {
             (node as IJSLComponent).onUpdate.call(node, vnode);
         }
         return vnode;
@@ -217,9 +238,14 @@ export class JSLRender {
             }
             return true;
         } else {
+            const newChildren = [];
             for (let idx = 0; idx < renderedNode.children.length; idx++) {
-                vnode.children[idx] = this.updateNode(renderedNode.children[idx] as IJSLVNode, vnode.children[idx]);
+                const tmp = this.updateNode(renderedNode.children[idx] as IJSLVNode, vnode.children[idx]);
+                if (tmp != null) {
+                    newChildren.push(tmp);
+                }
             }
+            vnode.children = newChildren;
             return false;
         }
     }
