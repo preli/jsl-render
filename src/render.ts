@@ -13,7 +13,7 @@ function isFnc(f: any): boolean {
 }
 
 function isComponent(node: IJSLVNode | IJSLComponent): boolean {
-    return isFnc((node as any).render);
+    return node != null && isFnc((node as any).render);
 }
 
 function areEqual(a: IJSLComponent, b: IJSLComponent): boolean {
@@ -278,19 +278,20 @@ export class JSLRender {
 
         function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): number {
             for (let i = 0; i < children.length; i++) {
-                if ((children[i].dom as any)?._component === component) {
+                if ((children[i].dom as any)._component === component) {
                     return i;
                 }
-                return -1;
             }
+            return -1;
         }
 
         function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
             while (node.children.length <= newIdx) {
                 // newIdx is outside of bounds of node.children
                 const dummyDom = document.createElement("span");
-                node.dom.insertBefore(node.dom.children[oldIdx], dummyDom);
-                node.children.splice(oldIdx, 0, { tag: "span", dom: dummyDom });
+                node.dom.appendChild(dummyDom);
+                node.dom.insertBefore(dummyDom, node.dom.children[oldIdx]);
+                node.children.splice(oldIdx, 0, { tag: "span", dom: dummyDom, children: [] });
                 oldIdx++;
             }
             if (oldIdx === newIdx) {
@@ -309,8 +310,9 @@ export class JSLRender {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;
+            // debugger;
             for (idx = 0, l = vnode.children.length; idx < l; idx++) {
-                const c = vnode.children[l];
+                const c = vnode.children[idx];
                 if (isComponent(c)) {
                     const oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
                     if (oldCompIdx >= 0 && oldCompIdx !== idx) { // found
@@ -330,13 +332,13 @@ export class JSLRender {
                         if (dom != null && dom.parentElement != null) {
                             dom.parentElement.removeChild(dom);
                         }
-                        renderedNode.children.length = l;
                     }
+                    renderedNode.children.length = l;
                 } else if (l > renderedNode.children.length) {
                     // add dummy nodes to make renderedNode same size
                     for (let i = renderedNode.children.length; i < l; i++) {
                         const dummyDom = document.createElement("span");
-                        renderedNode.children.push({ tag: "span", dom: dummyDom });
+                        renderedNode.children.push({ tag: "span", dom: dummyDom, children: [] });
                         renderedNode.dom.appendChild(dummyDom);
                     }
                 }
