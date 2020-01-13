@@ -2,6 +2,8 @@ import { IJSLComponent, IJSLVNode } from "./interfaces";
 
 let lastCreatedRenderer: JSLRender = null;
 
+const MaxReorderChildren = 200;
+
 export function refresh() {
     if (lastCreatedRenderer != null) {
         lastCreatedRenderer.refresh();
@@ -45,6 +47,36 @@ function swapDomElements(obj1: Element, obj2: Element) {
             parent2.appendChild(obj1);
         }
     }
+}
+
+function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): number {
+    for (let i = 0; i < children.length; i++) {
+        if ((children[i].dom as any)._component === component) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
+    while (node.children.length <= newIdx) {
+        // newIdx is outside of bounds of node.children
+        const dummyDom = document.createElement("span");
+        node.dom.appendChild(dummyDom);
+        node.dom.insertBefore(dummyDom, node.dom.children[oldIdx]);
+        node.children.splice(oldIdx, 0, { tag: "span", dom: dummyDom, children: [] });
+        oldIdx++;
+    }
+    if (oldIdx === newIdx) {
+        return;
+    }
+
+    swapDomElements(node.dom.children[newIdx], node.dom.children[oldIdx]);
+
+    // switch in node.children as well (not just in DOM)
+    const tmp = node.children[oldIdx];
+    node.children[oldIdx] = node.children[newIdx];
+    node.children[newIdx] = tmp;
 }
 
 export class JSLRender {
@@ -275,46 +307,17 @@ export class JSLRender {
     }
 
     private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
-
-        function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): number {
-            for (let i = 0; i < children.length; i++) {
-                if ((children[i].dom as any)._component === component) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
-            while (node.children.length <= newIdx) {
-                // newIdx is outside of bounds of node.children
-                const dummyDom = document.createElement("span");
-                node.dom.appendChild(dummyDom);
-                node.dom.insertBefore(dummyDom, node.dom.children[oldIdx]);
-                node.children.splice(oldIdx, 0, { tag: "span", dom: dummyDom, children: [] });
-                oldIdx++;
-            }
-            if (oldIdx === newIdx) {
-                return;
-            }
-
-            swapDomElements(node.dom.children[newIdx], node.dom.children[oldIdx]);
-
-            // switch in node.children as well (not just in DOM)
-            const tmp = node.children[oldIdx];
-            node.children[oldIdx] = node.children[newIdx];
-            node.children[newIdx] = tmp;
-        }
-
-        if (renderedNode.children.length > 0 && vnode.children.length > 0) {
+        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length < MaxReorderChildren) {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;
-            // debugger;
             for (idx = 0, l = vnode.children.length; idx < l; idx++) {
                 const c = vnode.children[idx];
                 if (isComponent(c)) {
-                    const oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
+                    let oldCompIdx = idx;
+                    if (renderedNode.children[oldCompIdx] !== c) {
+                        oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
+                    }
                     if (oldCompIdx >= 0 && oldCompIdx !== idx) { // found
                         switchChildren(idx, oldCompIdx, renderedNode);
                         anyMatchesFound = true;

@@ -111,3 +111,35 @@ function test06() {
 
 clear();
 test06();
+
+
+// go from 4 to no children and back to 4
+function test07() {
+
+    const dom = document.getElementById("test07");
+
+    const comps = [];
+    let str = "<div>";
+    for (let i = 0; i < 190; i++) {
+        comps.push(new TextComponent("hello " + i));
+        str += "<div>hello " + i + "</div>";
+    }
+    str += "</div>";
+    dom.innerHTML = str;
+
+    const node = {tag: "div", children: comps};
+    const render = getRenderer();
+    render.render(node);
+    render.render();
+    render.render();
+    render.render();
+    node.children.splice(100, 10);
+    console.log("now changed");
+    render.render();
+
+    // compareResult("07", "test07");
+}
+
+clear();
+setTimeout(test07, 2000);
+
