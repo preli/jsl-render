@@ -87,3 +87,27 @@ function test05() {
 
 clear();
 test05();
+
+// go from 4 to no children and back to 4
+function test06() {
+    const comps = [
+        new CountCreateComponent("ONE"),
+        new CountCreateComponent("TWO"),
+        new CountCreateComponent("THREE"),
+        new CountCreateComponent("FOUR")
+    ];
+    const node = {tag: "div", children: comps};
+    const render = getRenderer();
+    render.render(node);
+    node.children = [];
+    render.render();
+    compareResult("06", "test06");
+
+    node.children = comps;
+    render.render();
+    render.render();
+    compareResult("06", "test06-2");
+}
+
+clear();
+test06();
