@@ -24,6 +24,29 @@ function areEqual(a: IJSLComponent, b: IJSLComponent): boolean {
     // return (a as any).__proto__ !== (b as any).__proto__;
 }
 
+function swapDomElements(obj1: Element, obj2: Element) {
+    // save the location of obj2
+    const parent2 = obj2.parentElement;
+    const next2 = obj2.nextElementSibling;
+    // special case for obj1 is the next sibling of obj2
+    if (next2 === obj1) {
+        // just put obj1 before obj2
+        parent2.insertBefore(obj1, obj2);
+    } else {
+        // insert obj2 right before obj1
+        obj1.parentNode.insertBefore(obj2, obj1);
+
+        // now insert obj1 where obj2 was
+        if (next2) {
+            // if there was an element after obj2, then insert obj1 right before that
+            parent2.insertBefore(obj1, next2);
+        } else {
+            // otherwise, just append as last child
+            parent2.appendChild(obj1);
+        }
+    }
+}
+
 export class JSLRender {
 
     private renderedVNode: IJSLVNode;
@@ -183,7 +206,7 @@ export class JSLRender {
         this.sanitize(vnode);
         vnode.dom = renderedNode.dom;
         // if (isComp) {
-            (vnode.dom as any)._component = isComp ? node : undefined;
+        (vnode.dom as any)._component = isComp ? node : undefined;
         // }
 
         if (renderedNode.tag !== vnode.tag) {
@@ -226,7 +249,7 @@ export class JSLRender {
             renderedNode.content !== vnode.content) {
             if (vnode.children.length > 0) {
                 this.callRemoveEvents(renderedNode);
-                vnode.dom.innerHTML = ""; // TODO -> better solution (?)
+                vnode.dom.innerHTML = "";
                 for (let idx = 0; idx < vnode.children.length; idx++) {
                     vnode.children[idx] = this.createNode(vnode.dom, vnode.children[idx]);
                 }
@@ -262,21 +285,60 @@ export class JSLRender {
             }
         }
 
-        function switchDom(newIdx, oldIdx, node: IJSLVNode): void {
-            // TODO: what if newIdx is outside of bounds of node.dom.children
-            node.dom.children[newIdx].parentNode.insertBefore(node.dom.children[newIdx], node.dom.children[oldIdx]);
+        function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
+            while (node.children.length <= newIdx) {
+                // newIdx is outside of bounds of node.children
+                const dummyDom = document.createElement("span");
+                node.dom.insertBefore(node.dom.children[oldIdx], dummyDom);
+                node.children.splice(oldIdx, 0, { tag: "span", dom: dummyDom });
+                oldIdx++;
+            }
+            if (oldIdx === newIdx) {
+                return;
+            }
+
+            swapDomElements(node.dom.children[newIdx], node.dom.children[oldIdx]);
+
+            // switch in node.children as well (not just in DOM)
+            const tmp = node.children[oldIdx];
+            node.children[oldIdx] = node.children[newIdx];
+            node.children[newIdx] = tmp;
         }
 
         if (renderedNode.children.length > 0 && vnode.children.length > 0) {
-            for (let idx = 0, l = vnode.children.length; idx < l; idx++) {
+            let idx: number;
+            let l: number;
+            let anyMatchesFound = false;
+            for (idx = 0, l = vnode.children.length; idx < l; idx++) {
                 const c = vnode.children[l];
                 if (isComponent(c)) {
                     const oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
-                    if (oldCompIdx >= 0) { // found
-                        switchDom(idx, oldCompIdx, renderedNode);
+                    if (oldCompIdx >= 0 && oldCompIdx !== idx) { // found
+                        switchChildren(idx, oldCompIdx, renderedNode);
+                        anyMatchesFound = true;
                     }
                 } else {
-                    // TODO
+                    // TODO? -> support reordering for Vnodes as well?
+                }
+            }
+            if (anyMatchesFound) {
+                if (l < renderedNode.children.length) {
+                    // dispose everything that is "left" and shorten renderedNode.children array to size l
+                    for (let i = l; i < renderedNode.children.length; i++) {
+                        this.callRemoveEvents(renderedNode.children[i] as IJSLVNode, true);
+                        const dom = (renderedNode.children[i] as IJSLVNode).dom;
+                        if (dom != null && dom.parentElement != null) {
+                            dom.parentElement.removeChild(dom);
+                        }
+                        renderedNode.children.length = l;
+                    }
+                } else if (l > renderedNode.children.length) {
+                    // add dummy nodes to make renderedNode same size
+                    for (let i = renderedNode.children.length; i < l; i++) {
+                        const dummyDom = document.createElement("span");
+                        renderedNode.children.push({ tag: "span", dom: dummyDom });
+                        renderedNode.dom.appendChild(dummyDom);
+                    }
                 }
             }
         }
