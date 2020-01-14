@@ -218,6 +218,7 @@ function test09() {
     result = result && assert(clickCounter === 1, "test09 - 03");
 
     delete (node.children[0] as IJSLVNode).attr.click;
+    (node.children[0] as IJSLVNode).attr.id = "yoyoyo";
     render.render();
     (document.querySelector("#main .span09") as HTMLSpanElement).click();
     result = result && assert(clickCounter === 1, "test09 - 04");
@@ -319,7 +320,6 @@ testLast();
 //       #) test with real world render example / data ?
 //       #) event handler testen und ob refresh danach aufgerufen wird
 //       +) Test onInit
-//       +) Test attributes
+//       +) check if removehandlers of children are executed when parent is removed !!!!!!
 //       +) Test were children of a component are "manually" removed
-//       +) Test tag change
 
