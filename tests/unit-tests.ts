@@ -149,7 +149,6 @@ function test07() {
     const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
-
     compareResult("07", "test07");
     document.getElementById("test07").innerHTML = "";
 }

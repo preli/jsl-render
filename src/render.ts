@@ -301,7 +301,7 @@ export class JSLRender {
     }
 
     private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
-        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length < MaxReorderChildren) {
+        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length <= MaxReorderChildren) {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;
