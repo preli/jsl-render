@@ -2,7 +2,7 @@ import { IJSLComponent, IJSLVNode } from "./interfaces";
 
 let lastCreatedRenderer: JSLRender = null;
 
-const MaxReorderChildren = 200;
+const MaxReorderChildren = 20000;
 
 export function refresh() {
     if (lastCreatedRenderer != null) {
@@ -315,11 +315,13 @@ export class JSLRender {
                 const c = vnode.children[idx];
                 if (isComponent(c)) {
                     let oldCompIdx = idx;
-                    if (renderedNode.children[oldCompIdx] !== c) {
+                    if ((renderedNode.children[oldCompIdx] as any)?.dom?._component !== c) {
                         oldCompIdx = findComponentIdx(renderedNode.children as IJSLVNode[], c as IJSLComponent);
                     }
-                    if (oldCompIdx >= 0 && oldCompIdx !== idx) { // found
-                        switchChildren(idx, oldCompIdx, renderedNode);
+                    if (oldCompIdx >= 0) { // found
+                        if (oldCompIdx !== idx) {
+                            switchChildren(idx, oldCompIdx, renderedNode);
+                        }
                         anyMatchesFound = true;
                     }
                 } else {

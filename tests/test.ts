@@ -23,3 +23,11 @@ export function getRenderer() {
 export function clear() {
     document.getElementById(settings.MainDiv).innerHTML = "";
 }
+
+export function assert(expression: boolean, text: string): boolean {
+    if (expression) {
+        return true;
+    }
+    console.error("Assert error: " + text);
+    return false;
+}

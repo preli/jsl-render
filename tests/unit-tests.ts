@@ -1,8 +1,10 @@
-import { getRenderer, compareResult, clear } from "./test";
+import { getRenderer, compareResult, clear, assert } from "./test";
 import { TextComponent } from "./components/TextComponent";
 import { CountCreateComponent } from "./components/CountCreateComponent";
+import { ThirdPartyComponent } from "./components/ThirdPartyComponent";
+import { IJSLComponent } from "../src/interfaces";
+import { ChildComponent } from "./components/ChildComponent";
 
-// run test 1
 
 // tests rendering of a single VNode and that children should have presedence over content
 function test01() {
@@ -13,7 +15,9 @@ function test01() {
 }
 
 clear();
+console.time("test01");
 test01();
+console.timeEnd("test01");
 
 // tests rendering of a single Component
 function test02() {
@@ -24,7 +28,9 @@ function test02() {
 }
 
 clear();
+console.time("test02");
 test02();
+console.timeEnd("test02");
 
 // tests basic reordering
 function test03() {
@@ -44,7 +50,9 @@ function test03() {
 }
 
 clear();
+console.time("test03");
 test03();
+console.timeEnd("test03");
 
 // tests reordering with more elements than previously rendered
 function test04() {
@@ -62,10 +70,17 @@ function test04() {
     render.render();
     render.render();
     compareResult("04", "test04");
+
+    comps.push(new CountCreateComponent("FIFE"));
+    render.render();
+    render.render();
+    compareResult("04-2", "test04-2");
 }
 
 clear();
+console.time("test04");
 test04();
+console.timeEnd("test04");
 
 // tests reordering with less elements than previously rendered
 function test05() {
@@ -86,7 +101,9 @@ function test05() {
 }
 
 clear();
+console.time("test05");
 test05();
+console.timeEnd("test05");
 
 // go from 4 to no children and back to 4
 function test06() {
@@ -110,17 +127,19 @@ function test06() {
 }
 
 clear();
+console.time("test06");
 test06();
+console.timeEnd("test06");
 
 
-// go from 4 to no children and back to 4
+// test with 1000 components
 function test07() {
 
     const dom = document.getElementById("test07");
 
     const comps = [];
     let str = "<div>";
-    for (let i = 0; i < 190; i++) {
+    for (let i = 0; i < 1000; i++) {
         comps.push(new TextComponent("hello " + i));
         str += "<div>hello " + i + "</div>";
     }
@@ -130,16 +149,62 @@ function test07() {
     const node = {tag: "div", children: comps};
     const render = getRenderer();
     render.render(node);
-    render.render();
-    render.render();
-    render.render();
-    node.children.splice(100, 10);
-    console.log("now changed");
-    render.render();
 
-    // compareResult("07", "test07");
+    compareResult("07", "test07");
+    document.getElementById("test07").innerHTML = "";
 }
 
 clear();
-setTimeout(test07, 2000);
+console.time("test07");
+test07();
+console.timeEnd("test07");
+
+
+// test life cycle events
+function test08() {
+
+    const comps: IJSLComponent[] = [new ThirdPartyComponent()];
+
+    const node = new ChildComponent(comps);
+    const render = getRenderer();
+    render.render(node);
+
+    let result = true;
+
+    result = result && assert(document.body.classList.contains("thirdPartyComp"), "test08 - 01");
+
+    comps[0] = new ThirdPartyComponent();
+    render.render();
+    result = result && assert(document.body.classList.contains("thirdPartyComp"), "test08 - 02");
+    result = result && assert(!document.body.classList.contains("thirdPartyUpdate"), "test08 - 03");
+
+    (comps[0] as ThirdPartyComponent).setCounter(100);
+    render.render(node);
+    result = result && assert(document.body.classList.contains("thirdPartyUpdate"), "test08 - 04");
+
+    comps[0] = new TextComponent("test");
+    render.render();
+    result = result && assert(!document.body.classList.contains("thirdPartyComp"), "test08 - 05");
+
+    if (result) {
+        console.info("Test 08 was successful");
+    }
+}
+
+clear();
+console.time("test08");
+test08();
+console.timeEnd("test08");
+
+// TODO: #) test mit tief verschachtelten Componenten / Nodes
+//       #) test mit Componenten und VNodes gemischt (auch reorder test mit gemischten Children)
+//       #) test with real world render example / data ?
+//       #) isEquals test
+//       #) event handler testen und ob refresh danach aufgerufen wird
+//       +) Test refresh
+//       +) Test onInit
+//       +) Test attributes
+//       +) Test raw vs escaped
+//       +) Test were children of a component are "manually" removed
+//       +) Test tag change
 
