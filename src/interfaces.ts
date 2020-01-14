@@ -4,7 +4,7 @@ export interface IJSLVNode {
     tag: string;
     content?: string;
     children?: Array<IJSLVNode | IJSLComponent>;
-    attr?: {};
+    attr?: any;
     raw?: boolean;
     dom?: HTMLElement;
 }

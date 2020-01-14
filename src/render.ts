@@ -198,12 +198,6 @@ export class JSLRender {
             // -> needs to be removed now, so return undefined
             return;
         }
-        // if (!node) {
-        //     debugger;
-        //     this.callRemoveEvents(renderedNode, true);
-        //     renderedNode.dom.parentElement.removeChild(renderedNode.dom);
-        //     return;
-        // }
 
         let vnode: IJSLVNode;
         const isComp = isComponent(node);
@@ -386,8 +380,13 @@ export class JSLRender {
                         break;
                     }
                 }
-                if (vnode.attr[attr].call(component || node, args, vnode) !== false) {
-                    this.refresh();
+                const fnc = vnode.attr[attr];
+                if (fnc != null) {
+                    if (fnc.call(component || node, args, vnode) !== false) {
+                        this.refresh();
+                    }
+                } else {
+                    vnode.dom.removeEventListener(attr, eventHandler);
                 }
             };
             vnode.dom.addEventListener(attr, eventHandler);

@@ -2,7 +2,7 @@ import { getRenderer, compareResult, clear, assert } from "./test";
 import { TextComponent } from "./components/TextComponent";
 import { CountCreateComponent } from "./components/CountCreateComponent";
 import { ThirdPartyComponent } from "./components/ThirdPartyComponent";
-import { IJSLComponent } from "../src/interfaces";
+import { IJSLComponent, IJSLVNode } from "../src/interfaces";
 import { ChildComponent } from "./components/ChildComponent";
 
 
@@ -40,7 +40,7 @@ function test03() {
         new CountCreateComponent("THREE"),
         new CountCreateComponent("FOUR")
     ];
-    const node = {tag: "div", children: comps};
+    const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
     comps.reverse();
@@ -62,7 +62,7 @@ function test04() {
         // new CountCreateComponent("THREE"),
         new CountCreateComponent("FOUR")
     ];
-    const node = {tag: "div", children: comps};
+    const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
     comps.splice(1, 0, new CountCreateComponent("TWO"), new CountCreateComponent("THREE"));
@@ -90,7 +90,7 @@ function test05() {
         new CountCreateComponent("THREE"),
         new CountCreateComponent("FOUR")
     ];
-    const node = {tag: "div", children: comps};
+    const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
     comps.splice(1, 2);
@@ -113,7 +113,7 @@ function test06() {
         new CountCreateComponent("THREE"),
         new CountCreateComponent("FOUR")
     ];
-    const node = {tag: "div", children: comps};
+    const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
     node.children = [];
@@ -146,7 +146,7 @@ function test07() {
     str += "</div>";
     dom.innerHTML = str;
 
-    const node = {tag: "div", children: comps};
+    const node = { tag: "div", children: comps };
     const render = getRenderer();
     render.render(node);
 
@@ -195,6 +195,40 @@ clear();
 console.time("test08");
 test08();
 console.timeEnd("test08");
+
+
+
+// tests attributes and event handlers
+function test09() {
+
+    let clickCounter = 0;
+
+    function clickme() {
+        clickCounter++;
+    }
+
+    const node: IJSLVNode = { tag: "div", children: [{ tag: "span", content: "Heho", attr: { id: "span09", style: "background:red;", click: clickme } }] };
+    const render = getRenderer();
+    render.render(node);
+    compareResult("09", "test09");
+
+    let result = true;
+    document.getElementById("span09").click();
+    result = result && assert(clickCounter === 1, "test09 - 01");
+
+    delete (node.children[0] as IJSLVNode).attr.click;
+    render.render();
+    document.getElementById("span09").click();
+
+    result = result && assert(clickCounter === 1, "test09 - 01");
+    if (result) {
+        console.info("Test 09-2 was successful");
+    }
+}
+
+clear();
+test09();
+
 
 // TODO: #) test mit tief verschachtelten Componenten / Nodes
 //       #) test mit Componenten und VNodes gemischt (auch reorder test mit gemischten Children)
