@@ -6,6 +6,7 @@ import { IJSLComponent, IJSLVNode } from "../src/interfaces";
 import { ChildComponent } from "./components/ChildComponent";
 
 
+
 // tests rendering of a single VNode and that children should have presedence over content
 function test01() {
     const node = { tag: "div", contet: "Hello world", children: [{ tag: "span", content: "Heho" }] };
@@ -248,15 +249,37 @@ function test10() {
 clear();
 test10();
 
+// tests refresh vs render
+function test11() {
+    const c = new CountCreateComponent("A");
+    const node: IJSLVNode = { tag: "div", children: [c] };
+    const render = getRenderer();
+    render.render(node);
+    assert(c.getCounter() === 1, "11-1");
+    render.refresh();
+    node.children.length = 0;
+    render.refresh();
+    node.children.push(c);
+    render.refresh();
+    assert(c.getCounter() === 1, "11-2");
+    node.children.length = 0;
+    render.render();
+    node.children.push(c);
+    render.render();
+    assert(c.getCounter() === 2, "11-3");
+}
+
+clear();
+test11();
+
+
 // TODO: #) test mit tief verschachtelten Componenten / Nodes
 //       #) test mit Componenten und VNodes gemischt (auch reorder test mit gemischten Children)
 //       #) test with real world render example / data ?
 //       #) isEquals test
 //       #) event handler testen und ob refresh danach aufgerufen wird
-//       +) Test refresh
 //       +) Test onInit
 //       +) Test attributes
-//       +) Test raw vs escaped
 //       +) Test were children of a component are "manually" removed
 //       +) Test tag change
 

@@ -12,6 +12,10 @@ export class CountCreateComponent implements IJSLComponent {
         this.counter++;
     }
 
+    public getCounter() {
+        return this.counter;
+    }
+
     public render(): IJSLVNode {
         return {tag: "div", content: this.id + " " + this.counter};
     }
