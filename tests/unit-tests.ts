@@ -139,7 +139,7 @@ function test07() {
 
     const comps = [];
     let str = "<div>";
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 10000; i++) {
         comps.push(new TextComponent("hello " + i));
         str += "<div>hello " + i + "</div>";
     }

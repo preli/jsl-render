@@ -2,7 +2,7 @@ import { IJSLComponent, IJSLVNode } from "./interfaces";
 
 let lastCreatedRenderer: JSLRender = null;
 
-const MaxReorderChildren = 20000;
+const MaxReorderChildren = 1000;
 
 export function refresh() {
     if (lastCreatedRenderer != null) {
