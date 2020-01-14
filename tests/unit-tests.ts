@@ -4,6 +4,7 @@ import { CountCreateComponent } from "./components/CountCreateComponent";
 import { ThirdPartyComponent } from "./components/ThirdPartyComponent";
 import { IJSLComponent, IJSLVNode } from "../src/interfaces";
 import { ChildComponent } from "./components/ChildComponent";
+import { OverviewComponent } from "./components/OverviewComponent";
 
 
 
@@ -249,8 +250,49 @@ function test10() {
 clear();
 test10();
 
+
+// isEqual test
+function test12() {
+    const comps = [
+        new CountCreateComponent("ONE")
+    ];
+    (comps[0] as any).isEqual = () => {
+        return false;
+    };
+    const node = { tag: "div", children: comps };
+    const render = getRenderer();
+    render.render(node);
+    render.render();
+    render.render();
+    if (assert(comps[0].getCounter() === 3, "test12-1")) {
+        console.info("test 12 was successful");
+    }
+}
+
+clear();
+console.time("test12");
+test12();
+console.timeEnd("test12");
+
+
+// table example
+function test13() {
+    const render = getRenderer();
+    render.render(new OverviewComponent());
+    render.render();
+    (document.querySelector("#main button") as HTMLButtonElement).click();
+    render.render();
+    compareResult("13", "test13");
+}
+
+clear();
+console.time("test13");
+test13();
+console.timeEnd("test13");
+
+
 // tests refresh vs render
-function test11() {
+function testLast() {
     const c = new CountCreateComponent("A");
     const node: IJSLVNode = { tag: "div", children: [c] };
     const render = getRenderer();
@@ -270,13 +312,11 @@ function test11() {
 }
 
 clear();
-test11();
-
+testLast();
 
 // TODO: #) test mit tief verschachtelten Componenten / Nodes
 //       #) test mit Componenten und VNodes gemischt (auch reorder test mit gemischten Children)
 //       #) test with real world render example / data ?
-//       #) isEquals test
 //       #) event handler testen und ob refresh danach aufgerufen wird
 //       +) Test onInit
 //       +) Test attributes

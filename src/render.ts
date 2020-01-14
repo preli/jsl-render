@@ -176,7 +176,7 @@ export class JSLRender {
     private cloneVNode(vnode: IJSLVNode): IJSLVNode {
         return {
             tag: vnode.tag,
-            attr: {...vnode.attr},
+            attr: { ...vnode.attr },
             children: (vnode.children || []).slice(),
             dom: vnode.dom,
             raw: vnode.raw,
@@ -354,7 +354,7 @@ export class JSLRender {
                     renderedNode.dom.removeEventListener(oldAttr, renderedNode.dom["_" + oldAttr + "_"]);
                     renderedNode.dom["_" + oldAttr + "_"] = undefined;
                 } else {
-                    if (vnode.attr[oldAttr] === undefined) {
+                    if (vnode.attr[oldAttr] == null) {
                         renderedNode.dom.removeAttribute(oldAttr);
                     }
                 }
@@ -392,7 +392,11 @@ export class JSLRender {
             vnode.dom.addEventListener(attr, eventHandler);
             vnode.dom["_" + attr + "_"] = eventHandler;
         } else {
-            vnode.dom.setAttribute(attr, vnode.attr[attr]);
+            if (vnode.attr[attr] != null) {
+                vnode.dom.setAttribute(attr, vnode.attr[attr]);
+            } else {
+                vnode.dom.removeAttribute(attr);
+            }
         }
     }
 

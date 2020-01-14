@@ -3,7 +3,7 @@ import { refresh } from "../../src/render";
 
 export class CountCreateComponent implements IJSLComponent {
 
-    private counter = 0;
+    protected counter = 0;
 
     public constructor(private id: string) {
     }
