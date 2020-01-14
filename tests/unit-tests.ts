@@ -219,8 +219,9 @@ function test09() {
 
     delete (node.children[0] as IJSLVNode).attr.click;
     (node.children[0] as IJSLVNode).attr.id = "yoyoyo";
+    delete (node.children[0] as IJSLVNode).attr.class;
     render.render();
-    (document.querySelector("#main .span09") as HTMLSpanElement).click();
+    (document.querySelector("#main #yoyoyo") as HTMLSpanElement).click();
     result = result && assert(clickCounter === 1, "test09 - 04");
 
     (node.children[0] as IJSLVNode).attr.style = "background:green;";
