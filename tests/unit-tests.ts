@@ -207,27 +207,33 @@ function test09() {
         clickCounter++;
     }
 
-    const node: IJSLVNode = { tag: "div", children: [{ tag: "span", content: "Heho", attr: { id: "span09", style: "background:red;", click: clickme } }] };
+    const node: IJSLVNode = { tag: "div", children: [{ tag: "span", content: "Heho", attr: { class: "span09", style: "background:red;", click: clickme } }] };
     const render = getRenderer();
     render.render(node);
     compareResult("09", "test09");
 
     let result = true;
-    document.getElementById("span09").click();
-    result = result && assert(clickCounter === 1, "test09 - 01");
+    (document.querySelector("#main .span09") as HTMLSpanElement).click();
+    result = result && assert(clickCounter === 1, "test09 - 03");
 
     delete (node.children[0] as IJSLVNode).attr.click;
     render.render();
-    document.getElementById("span09").click();
+    (document.querySelector("#main .span09") as HTMLSpanElement).click();
+    result = result && assert(clickCounter === 1, "test09 - 04");
 
-    result = result && assert(clickCounter === 1, "test09 - 01");
+    (node.children[0] as IJSLVNode).attr.style = "background:green;";
+    render.render();
+    compareResult("09-2", "test09-2");
+
     if (result) {
-        console.info("Test 09-2 was successful");
+        console.info("Test 09-3 was successful");
     }
+
 }
 
 clear();
 test09();
+
 
 
 // TODO: #) test mit tief verschachtelten Componenten / Nodes

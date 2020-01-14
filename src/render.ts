@@ -176,7 +176,7 @@ export class JSLRender {
     private cloneVNode(vnode: IJSLVNode): IJSLVNode {
         return {
             tag: vnode.tag,
-            attr: vnode.attr,
+            attr: {...vnode.attr},
             children: (vnode.children || []).slice(),
             dom: vnode.dom,
             raw: vnode.raw,
