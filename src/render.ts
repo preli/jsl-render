@@ -242,13 +242,14 @@ export class JSLRender {
             return this.createNode(parent, node, renderedNode.dom);
         }
 
-        let attributesChanged = false;
-        if (!this.areAttributesEqual(renderedNode, vnode)) {
-            this.updateAttributes(renderedNode, vnode, node);
-            attributesChanged = true;
-        } else {
-            this.refreshHandlers(renderedNode, vnode, node);
-        }
+        const attributesChanged = this.updateAttributes(renderedNode, vnode, node);
+        // let attributesChanged = false;
+        // if (!this.areAttributesEqual(renderedNode, vnode)) {
+        //     this.updateAttributes(renderedNode, vnode, node);
+        //     attributesChanged = true;
+        // } else {
+        //     this.refreshHandlers(renderedNode, vnode, node);
+        // }
         const contentChanged = this.updateContent(renderedNode, vnode);
         if ((contentChanged || attributesChanged) && isComp && (node as IJSLComponent).onUpdate) {
             (node as IJSLComponent).onUpdate.call(node, vnode);
@@ -257,17 +258,17 @@ export class JSLRender {
     }
 
 
-    private refreshHandlers(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
-        for (const attr in vnode.attr) {
-            if (isFnc(vnode.attr[attr]) &&
-                renderedNode.attr[attr] !== vnode.attr[attr]) {
-                if (renderedNode.dom["_" + attr + "_"] != null) {
-                    renderedNode.dom.removeEventListener(attr, renderedNode.dom["_" + attr + "_"]);
-                }
-                this.setAttribute(vnode, node, attr);
-            }
-        }
-    }
+    // private refreshHandlers(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
+    //     for (const attr in vnode.attr) {
+    //         if (isFnc(vnode.attr[attr]) &&
+    //             renderedNode.attr[attr] !== vnode.attr[attr]) {
+    //             if (renderedNode.dom["_" + attr + "_"] != null) {
+    //                 renderedNode.dom.removeEventListener(attr, renderedNode.dom["_" + attr + "_"]);
+    //             }
+    //             this.setAttribute(vnode, node, attr);
+    //         }
+    //     }
+    // }
 
     private updateContent(renderedNode: IJSLVNode, vnode: IJSLVNode): boolean {
         this.tryToReorderChildren(renderedNode, vnode);
@@ -345,27 +346,60 @@ export class JSLRender {
         }
     }
 
-    private updateAttributes(renderedNode: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent) {
-        // clear previous rendered attributes
-        for (const oldAttr in renderedNode.attr) {
-            if (renderedNode.attr.hasOwnProperty(oldAttr)) {
-                if (isFnc(renderedNode.attr[oldAttr]) &&
-                    renderedNode.attr[oldAttr] !== vnode.attr[oldAttr]) {
-                    renderedNode.dom.removeEventListener(oldAttr, renderedNode.dom["_" + oldAttr + "_"]);
-                    renderedNode.dom["_" + oldAttr + "_"] = undefined;
-                } else {
-                    if (vnode.attr[oldAttr] == null) {
-                        renderedNode.dom.removeAttribute(oldAttr);
+    private callRemoveEvents(vnode: IJSLVNode, includeOwnTag?: boolean) {
+
+        for (let idx = 0; idx < vnode.children.length; idx++) {
+            const cnode: IJSLVNode = vnode.children[idx] as IJSLVNode;
+            if (cnode && (cnode as IJSLVNode).dom) {
+                execute(cnode);
+                this.callRemoveEvents(cnode);
+            }
+        }
+
+        if (includeOwnTag && (vnode as IJSLVNode).dom) {
+            execute(vnode);
+        }
+
+        function execute(node: IJSLVNode) {
+            const component: IJSLComponent = (node.dom as any)._component;
+            if (component && component.onRemove) {
+                component.onRemove.call(component, {
+                    container: node.dom.parentElement,
+                    dom: node.dom,
+                    node
+                });
+            }
+        }
+    }
+
+    private updateAttributes(rendered: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent): boolean {
+        let result = false;
+        for (const attribute in vnode.attr) {
+            if (vnode.attr.hasOwnProperty(attribute) && vnode.attr[attribute] !== rendered.attr[attribute]) {
+                if (isFnc(rendered.attr[attribute])) {
+                    if (rendered.dom["_" + attribute + "_"] != null) {
+                        rendered.dom.removeEventListener(attribute, rendered.dom["_" + attribute + "_"]);
                     }
+                } else {
+                    result = true;
+                }
+                this.setAttribute(vnode, node, attribute);
+            }
+        }
+        // check for attributes present in rendered but not in vnode (new node)
+        for (const attribute in rendered.attr) {
+            if (rendered.attr.hasOwnProperty(attribute) && !vnode.attr.hasOwnProperty(attribute)) {
+                if (isFnc(rendered.attr[attribute])) {
+                    if (rendered.dom["_" + attribute + "_"] != null) {
+                        rendered.dom.removeEventListener(attribute, rendered.dom["_" + attribute + "_"]);
+                    }
+                } else {
+                    rendered.dom.removeAttribute(attribute);
+                    result = true;
                 }
             }
         }
-        // set new attributes
-        for (const attr in vnode.attr) {
-            if (vnode.attr.hasOwnProperty(attr)) {
-                this.setAttribute(vnode, node, attr);
-            }
-        }
+        return result;
     }
 
     private setAttribute(vnode: IJSLVNode, node: IJSLComponent | IJSLVNode, attr: string) {
@@ -398,54 +432,6 @@ export class JSLRender {
                 vnode.dom.removeAttribute(attr);
             }
         }
-    }
-
-    private callRemoveEvents(vnode: IJSLVNode, includeOwnTag?: boolean) {
-
-        for (let idx = 0; idx < vnode.children.length; idx++) {
-            const cnode: IJSLVNode = vnode.children[idx] as IJSLVNode;
-            if (cnode && (cnode as IJSLVNode).dom) {
-                execute(cnode);
-                this.callRemoveEvents(cnode);
-            }
-        }
-
-        if (includeOwnTag && (vnode as IJSLVNode).dom) {
-            execute(vnode);
-        }
-
-        function execute(node: IJSLVNode) {
-            const component: IJSLComponent = (node.dom as any)._component;
-            if (component && component.onRemove) {
-                component.onRemove.call(component, {
-                    container: node.dom.parentElement,
-                    dom: node.dom,
-                    node
-                });
-            }
-        }
-    }
-
-    private areAttributesEqual(nodeA: IJSLVNode, nodeB: IJSLVNode): boolean {
-        for (const attribute in nodeA.attr) {
-            if (nodeA.attr.hasOwnProperty(attribute)) {
-                if (nodeB.attr.hasOwnProperty(attribute)) {
-                    if ((!isFnc(nodeA.attr[attribute]) || !isFnc(nodeB.attr[attribute])) // both values are a function (handlers)-> no need to update
-                        && nodeA.attr[attribute] !== nodeB.attr[attribute]) {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            }
-        }
-        // check for attributes present in nodeB but not in nodeA
-        for (const attribute in nodeB.attr) {
-            if (nodeB.attr.hasOwnProperty(attribute) && !nodeA.attr.hasOwnProperty(attribute)) {
-                return false;
-            }
-        }
-        return true;
     }
 
 }
