@@ -235,7 +235,7 @@ export class JSLRender {
         (vnode.dom as any)._component = isComp ? node : undefined;
         // }
 
-        if (renderedNode.tag !== vnode.tag) {
+        if (renderedNode.tag !== vnode.tag || renderedNode.raw !== vnode.raw) {
             // tag changed -> delete and recreate
             this.callRemoveEvents(renderedNode, true);
             const parent = renderedNode.dom.parentElement;

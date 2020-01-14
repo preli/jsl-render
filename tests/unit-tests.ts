@@ -234,6 +234,19 @@ clear();
 test09();
 
 
+// tests raw vs escaped
+function test10() {
+    let node: IJSLVNode = { tag: "div", content: "Hello world<span>he</span>" };
+    const render = getRenderer();
+    render.render(node);
+    compareResult("10", "test10");
+    node = { tag: "div", content: "Hello world<span>he</span>", raw: true };
+    render.render(node);
+    compareResult("10-2", "test10-2");
+}
+
+clear();
+test10();
 
 // TODO: #) test mit tief verschachtelten Componenten / Nodes
 //       #) test mit Componenten und VNodes gemischt (auch reorder test mit gemischten Children)
