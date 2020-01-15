@@ -216,14 +216,17 @@ function test09() {
 
     let result = true;
     (document.querySelector("#main .span09") as HTMLSpanElement).click();
-    result = result && assert(clickCounter === 1, "test09 - 03");
+    result = result && assert(clickCounter === 1, "test09 - 01");
 
     delete (node.children[0] as IJSLVNode).attr.click;
+    (document.querySelector("#main .span09") as HTMLSpanElement).click();
+    result = result && assert(clickCounter === 2, "test09 - 02");
+
     (node.children[0] as IJSLVNode).attr.id = "yoyoyo";
     delete (node.children[0] as IJSLVNode).attr.class;
     render.render();
     (document.querySelector("#main #yoyoyo") as HTMLSpanElement).click();
-    result = result && assert(clickCounter === 1, "test09 - 04");
+    result = result && assert(clickCounter === 2, "test09 - 03");
 
     (node.children[0] as IJSLVNode).attr.style = "background:green;";
     render.render();
@@ -348,10 +351,10 @@ function testLast() {
         refresh();
         assert(c.getCounter() === 2, "11-5");
         setTimeout(() => {
-            assert(c.getCounter() === 3, "11-6");
+            assert(c.getCounter() === 3, "11-6 ... make sure the browser window is visible for the last unit test");
             console.info("ALL TEST COMPLETED - check console errors to see if all passed");
-        }, 100);
-    }, 500);
+        }, 500);
+    }, 1000);
 }
 
 clear();

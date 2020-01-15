@@ -420,7 +420,7 @@ export class JSLRender {
                     if (fnc.call(component || node, args, vnode) !== false) {
                         this.refresh();
                     }
-                } else {
+                } else { // this should probably not happen anyway
                     vnode.dom.removeEventListener(attr, eventHandler);
                 }
             };
