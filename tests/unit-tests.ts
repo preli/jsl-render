@@ -5,6 +5,7 @@ import { ThirdPartyComponent } from "./components/ThirdPartyComponent";
 import { IJSLComponent, IJSLVNode } from "../src/interfaces";
 import { ChildComponent } from "./components/ChildComponent";
 import { OverviewComponent } from "./components/OverviewComponent";
+import { refresh } from "../src/render";
 
 
 
@@ -293,6 +294,34 @@ test13();
 console.timeEnd("test13");
 
 
+// table example
+function test14() {
+    const render = getRenderer();
+    const children = [{ tag: "div", content: "Hello" }, new ChildComponent([{
+        tag: "div", children: [
+            new ThirdPartyComponent()
+        ]
+    }])];
+    const c = new ChildComponent(children);
+    render.render(c);
+    let result = assert(document.body.classList.contains("thirdPartyComp"), "test14-1");
+    c.setChildren([]);
+    render.render();
+    result = result && assert(!document.body.classList.contains("thirdPartyComp"), "test14-2");
+    c.setChildren(children);
+    render.render();
+    result = assert(document.body.classList.contains("thirdPartyComp"), "test14-3");
+    if (result) {
+        console.info("test 14 was successful");
+    }
+}
+
+clear();
+console.time("test14");
+test14();
+console.timeEnd("test14");
+
+
 // tests refresh vs render
 function testLast() {
     const c = new CountCreateComponent("A");
@@ -311,6 +340,18 @@ function testLast() {
     node.children.push(c);
     render.render();
     assert(c.getCounter() === 2, "11-3");
+    setTimeout(() => {
+        assert(c.getCounter() === 2, "11-4");
+        node.children.length = 0;
+        render.render();
+        node.children.push(c);
+        refresh();
+        assert(c.getCounter() === 2, "11-5");
+        setTimeout(() => {
+            assert(c.getCounter() === 3, "11-6");
+            console.info("ALL TEST COMPLETED - check console errors to see if all passed");
+        }, 100);
+    }, 500);
 }
 
 clear();
@@ -321,6 +362,5 @@ testLast();
 //       #) test with real world render example / data ?
 //       #) event handler testen und ob refresh danach aufgerufen wird
 //       +) Test onInit
-//       +) check if removehandlers of children are executed when parent is removed !!!!!!
 //       +) Test were children of a component are "manually" removed
 

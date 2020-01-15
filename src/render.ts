@@ -274,8 +274,10 @@ export class JSLRender {
         this.tryToReorderChildren(renderedNode, vnode);
         if (renderedNode.children.length !== vnode.children.length ||
             renderedNode.content !== vnode.content) {
-            if (vnode.children.length > 0) {
+            if (renderedNode.children.length > 0) {
                 this.callRemoveEvents(renderedNode);
+            }
+            if (vnode.children.length > 0) {
                 vnode.dom.innerHTML = "";
                 for (let idx = 0; idx < vnode.children.length; idx++) {
                     vnode.children[idx] = this.createNode(vnode.dom, vnode.children[idx]);
@@ -347,7 +349,6 @@ export class JSLRender {
     }
 
     private callRemoveEvents(vnode: IJSLVNode, includeOwnTag?: boolean) {
-
         for (let idx = 0; idx < vnode.children.length; idx++) {
             const cnode: IJSLVNode = vnode.children[idx] as IJSLVNode;
             if (cnode && (cnode as IJSLVNode).dom) {
