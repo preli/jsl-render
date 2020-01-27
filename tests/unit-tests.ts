@@ -6,6 +6,7 @@ import { IJSLComponent, IJSLVNode } from "../src/interfaces";
 import { ChildComponent } from "./components/ChildComponent";
 import { OverviewComponent } from "./components/OverviewComponent";
 import { refresh } from "../src/render";
+import { ImmutableComponent } from "./components/ImmutableComponent";
 
 
 
@@ -323,6 +324,28 @@ clear();
 console.time("test14");
 test14();
 console.timeEnd("test14");
+
+
+
+// test life cycle events
+function test15() {
+
+    const comps: Array<IJSLVNode |IJSLComponent> = [{tag: "div", content: "yo"}, new ImmutableComponent(), {tag: "div", content: "yo"}];
+
+    const node = new ChildComponent(comps);
+    const render = getRenderer();
+    render.render(node);
+    comps.splice(0, 1);
+    render.render(node);
+
+    console.info("Test 15 was successful - if no errors appeard");
+
+}
+
+clear();
+console.time("test15");
+test15();
+console.timeEnd("test15");
 
 
 // tests refresh vs render

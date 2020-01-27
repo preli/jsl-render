@@ -12,6 +12,6 @@
   "author": "Philipp P.",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.5"
   }
 }
