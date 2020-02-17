@@ -58,6 +58,17 @@ function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): numb
     return -1;
 }
 
+function findNodeIdx(children: IJSLVNode[], node: IJSLVNode): number {
+    for (let i = 0; i < children.length; i++) {
+        if ((children[i].dom as any)._component == null) {
+            if (children[i].dom.id === node.attr.id) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
     while (node.children.length <= newIdx) {
         // newIdx is outside of bounds of node.children
@@ -322,7 +333,18 @@ export class JSLRender {
                         anyMatchesFound = true;
                     }
                 } else {
-                    // TODO? -> support reordering for Vnodes as well?
+                    if (c != null && (c as IJSLVNode).attr != null && (c as IJSLVNode).attr.id != null) {
+                        let oldNodeIdx = idx;
+                        if (renderedNode.attr != null && renderedNode.attr.id !== (c as IJSLVNode).attr.id) {
+                            oldNodeIdx = findNodeIdx(renderedNode.children as IJSLVNode[], c as IJSLVNode);
+                        }
+                        if (oldNodeIdx >= 0) {
+                            if (oldNodeIdx !== idx) {
+                                switchChildren(idx, oldNodeIdx, renderedNode);
+                            }
+                            anyMatchesFound = true;
+                        }
+                    }
                 }
             }
             if (anyMatchesFound) {
