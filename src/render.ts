@@ -61,7 +61,7 @@ function findComponentIdx(children: IJSLVNode[], component: IJSLComponent): numb
 function findNodeIdx(children: IJSLVNode[], node: IJSLVNode): number {
     for (let i = 0; i < children.length; i++) {
         if ((children[i].dom as any)._component == null) {
-            if (children[i].dom.id === node.attr.id) {
+            if (node.attr != null && children[i].dom.id === node.attr.id) {
                 return i;
             }
         }
