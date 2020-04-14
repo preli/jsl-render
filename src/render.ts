@@ -417,6 +417,9 @@ export class JSLRender {
                         rendered.dom.removeEventListener(attribute, rendered.dom["_" + attribute + "_"]);
                     }
                 } else {
+                    if (rendered.dom[attribute] !== undefined) {
+                        vnode.dom[attribute] = undefined;
+                    }
                     rendered.dom.removeAttribute(attribute);
                     result = true;
                 }
@@ -450,8 +453,15 @@ export class JSLRender {
             vnode.dom["_" + attr + "_"] = eventHandler;
         } else {
             if (vnode.attr[attr] != null) {
-                vnode.dom.setAttribute(attr, vnode.attr[attr]);
+                if (vnode.dom[attr] !== undefined) {
+                    vnode.dom[attr] = vnode.attr[attr];
+                } else {
+                    vnode.dom.setAttribute(attr, vnode.attr[attr]);
+                }
             } else {
+                if (vnode.dom[attr] !== undefined) {
+                    vnode.dom[attr] = vnode.attr[attr];
+                }
                 vnode.dom.removeAttribute(attr);
             }
         }
