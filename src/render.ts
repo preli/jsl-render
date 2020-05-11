@@ -1,12 +1,10 @@
 import { IJSLComponent, IJSLVNode } from "./interfaces";
 
-let lastCreatedRenderer: JSLRender = null;
-
 const MaxReorderChildren = 1000;
 
 export function refresh() {
-    if (lastCreatedRenderer != null) {
-        lastCreatedRenderer.refresh();
+    if (JSLRender.lastCreatedRenderer != null) {
+        JSLRender.lastCreatedRenderer.refresh();
     }
 }
 
@@ -92,6 +90,8 @@ function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
 
 export class JSLRender {
 
+    public static lastCreatedRenderer: JSLRender = null;
+
     private renderedVNode: IJSLVNode;
 
     private rootNode: IJSLVNode | IJSLComponent;
@@ -100,7 +100,7 @@ export class JSLRender {
 
     constructor(private container: HTMLElement, globalRefresh?: boolean) {
         if (globalRefresh) {
-            lastCreatedRenderer = this;
+            JSLRender.lastCreatedRenderer = this;
         }
     }
 
