@@ -1,7 +1,8 @@
 import { IJSLComponent, IJSLVNode } from "./interfaces";
+import anime from "./anime";
 
 const MaxReorderChildren = 1000;
-
+const ANIMATE_PROP = "animation";
 export function refresh() {
     if (JSLRender.lastCreatedRenderer != null) {
         JSLRender.lastCreatedRenderer.refresh();
@@ -88,9 +89,33 @@ function switchChildren(newIdx, oldIdx, node: IJSLVNode): void {
     node.children[newIdx] = tmp;
 }
 
+function areAttributesEqual(attr, v, a): boolean {
+    if (a === v) {
+        return true;
+    }
+    if (attr === "style" && typeof v === "object" && typeof a === "string") {
+        let s = "";
+        for (const style in v) {
+            if (v.hasOwnProperty(style) && v[style] != null) {
+                s += v[s] + ";";
+            }
+        }
+        return s === a;
+    }
+    if (attr === ANIMATE_PROP) {
+        return true; // TODO?
+    }
+    return false;
+}
+
 export class JSLRender {
 
     public static lastCreatedRenderer: JSLRender = null;
+
+    public static animate(options): any {
+        return options;
+        // return anime.timeline({}).add(options);
+    }
 
     private renderedVNode: IJSLVNode;
 
@@ -254,13 +279,6 @@ export class JSLRender {
         }
 
         const attributesChanged = this.updateAttributes(renderedNode, vnode, node);
-        // let attributesChanged = false;
-        // if (!this.areAttributesEqual(renderedNode, vnode)) {
-        //     this.updateAttributes(renderedNode, vnode, node);
-        //     attributesChanged = true;
-        // } else {
-        //     this.refreshHandlers(renderedNode, vnode, node);
-        // }
         const contentChanged = this.updateContent(renderedNode, vnode);
         if ((contentChanged || attributesChanged) && isComp && (node as IJSLComponent).onUpdate) {
             (node as IJSLComponent).onUpdate.call(node, vnode);
@@ -398,7 +416,7 @@ export class JSLRender {
     private updateAttributes(rendered: IJSLVNode, vnode: IJSLVNode, node: IJSLVNode | IJSLComponent): boolean {
         let result = false;
         for (const attribute in vnode.attr) {
-            if (vnode.attr.hasOwnProperty(attribute) && vnode.attr[attribute] !== rendered.attr[attribute]) {
+            if (vnode.attr.hasOwnProperty(attribute) && !areAttributesEqual(attribute, vnode.attr[attribute], rendered.attr[attribute])) {
                 if (isFnc(rendered.attr[attribute])) {
                     if (rendered.dom["_" + attribute + "_"] != null) {
                         rendered.dom.removeEventListener(attribute, rendered.dom["_" + attribute + "_"]);
@@ -449,8 +467,29 @@ export class JSLRender {
             vnode.dom.addEventListener(attr, eventHandler);
             vnode.dom["_" + attr + "_"] = eventHandler;
         } else {
-            if (vnode.attr[attr] != null) {
-                vnode.dom.setAttribute(attr, vnode.attr[attr]);
+            let value = vnode.attr[attr];
+            if (attr === "style" && typeof value === "object") {
+                let s = "";
+                for (const style in value) {
+                    if (value.hasOwnProperty(style) && value[style] != null) {
+                        s += style + ":" + value[style] + ";";
+                    }
+                }
+                value = s;
+            }
+            if (attr === ANIMATE_PROP) {
+                if (Array.isArray(value)) {
+                    const x = anime.timeline({targets: vnode.dom});
+                    for (let i = 0; i < value.length; i++) {
+                        x.add(value[i], value[i].offset);
+                    }
+                } else {
+                    anime({targets: vnode.dom, ...value});
+                }
+                return;
+            }
+            if (value != null) {
+                vnode.dom.setAttribute(attr, value);
             } else {
                 vnode.dom.removeAttribute(attr);
             }

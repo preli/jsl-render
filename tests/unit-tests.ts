@@ -12,7 +12,7 @@ import { ImmutableComponent } from "./components/ImmutableComponent";
 
 // tests rendering of a single VNode and that children should have presedence over content
 function test01() {
-    const node = { tag: "div", contet: "Hello world", children: [{ tag: "span", content: "Heho" }] };
+    const node = { tag: "div", attr: {style: {width: "20rem"}}, contet: "Hello world", children: [{ tag: "span", content: "Heho" }] };
     const render = getRenderer();
     render.render(node);
     compareResult("01", "test01");
