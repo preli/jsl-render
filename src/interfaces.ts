@@ -1,5 +1,15 @@
 import { JSLRender } from "./render";
 
+export interface IJSLAnimation {
+    attr: string;
+    from: any;
+    to: any;
+    duration?: number;
+    delay?: number;
+    easing?: "linear" | "easeInQuad" | "easeOutQuad" | "easeInOutQuad" | "easeInCubic" | "easeOutCubic" | "easeInOutCubic" | "easeInQuart" | "easeOutQuart" | "easeInOutQuart" | "easeInQuint" | "easeOutQuint" | "easeInOutQuint" | "easeInSine" | "easeOutSine" | "easeInOutSine" | "easeInExpo" | "easeOutExpo" | "easeInOutExpo" | "easeInCirc" | "easeOutCirc" | "easeInOutCirc" | "easeInElastic" | "easeOutElastic" | "easeInOutElastic" | /* "easeInBack" | "easeOutBack" | "easeInOutBack" | */ "easeInBounce" | "easeOutBounce" | "easeInOutBounce";
+    // TODO: more
+}
+
 export interface IJSLVNode {
     tag: string;
     content?: string;
@@ -7,8 +17,8 @@ export interface IJSLVNode {
     attr?: any;
     raw?: boolean;
     dom?: HTMLElement;
+    animation?: IJSLAnimation | IJSLAnimation[];
 }
-
 
 export interface IJSLComponent {
 
