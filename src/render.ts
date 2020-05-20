@@ -494,14 +494,17 @@ export class JSLRender {
 
     private animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
 
-        const status = { current: animation.from, iteration: 1, timeout: 20 };
-        // let step = 2;
+        const status = { current: animation.from, timeout: 20, start: 0, now: 0 };
         if (vnode.attr.style == null) {
             vnode.attr.style = {};
         }
         const fnc = () => {
-            // (parseInt(current, 10) + step) + "px";
-            const done = addStep(animation, status); // parseInt(current, 10) >= parseInt(animation.to, 10);
+            status.now = performance.now();
+            if (!status.start) {
+                status.start = status.now;
+            }
+            addStep(animation, status);
+            const done = status.now - status.start >= animation.duration ?? DEFAULT_ANIMATION_DURATION;
             if (done) {
                 status.current = animation.to;
             }
@@ -509,17 +512,18 @@ export class JSLRender {
             vnode.attr.style[animation.attr] = status.current;
             vnode.dom.style[animation.attr] = status.current;
             if (!done) {
-                status.iteration++;
-                setTimeout(() => {
-                    fnc();
-                }, status.timeout);
+                requestAnimationFrame(fnc);
             }
         };
-        fnc();
+        if (animation.delay) {
+            setTimeout(fnc, animation.delay);
+        } else {
+            fnc();
+        }
     }
 }
 
-function addStep(animation: IJSLAnimation, status: { current: any, iteration: number, timeout: number }): boolean {
+function addStep(animation: IJSLAnimation, status: { current: any, start: number, now: number }): void {
     const easingFnc = easingFunctions[animation.easing ?? "linear"];
     if (easingFnc == null) {
         throw new Error("easing function " + animation.easing + " does not exist");
@@ -527,113 +531,109 @@ function addStep(animation: IJSLAnimation, status: { current: any, iteration: nu
     const duration = animation.duration ?? DEFAULT_ANIMATION_DURATION;
 
     if (typeof status.current === "number") {
-        status.current = easingFnc(status.iteration * status.timeout, animation.from, animation.to - animation.from, duration);
-        return status.current >= animation.to;
+        status.current = easingFnc(status.now - status.start, animation.from, animation.to - animation.from, duration);
     }
 
     let value = parseFloat(status.current);
     if (status.current.toString().indexOf(value.toString()) === 0) {
-        value = easingFnc(status.iteration * status.timeout, parseFloat(animation.from), parseFloat(animation.to) - parseFloat(animation.from), duration);
-        const done = value >= parseFloat(animation.to);
+        value = easingFnc(status.now - status.start, parseFloat(animation.from), parseFloat(animation.to) - parseFloat(animation.from), duration);
         status.current = value + (status.current.toString().replace(/[0-9.-]/g, ""));
-        return done;
     }
     // TODO: not supported -> example colors
-    return true;
 }
 
 // t: current time, b: begInnIng value, c: change In value, d: duration
 /* BSD Licensed - taken from https://github.com/danro/jquery-easing/blob/master/jquery.easing.js */
 const easingFunctions = {
-    linear: function (t, b, c, d) {
+    linear(t, b, c, d) {
         return c / d * t + b; // correct?
     },
-    easeInQuad: function (t, b, c, d) {
+    easeInQuad(t, b, c, d) {
         return c * (t /= d) * t + b;
     },
-    easeOutQuad: function (t, b, c, d) {
+    easeOutQuad(t, b, c, d) {
         return -c * (t /= d) * (t - 2) + b;
     },
-    easeInOutQuad: function (t, b, c, d) {
+    easeInOutQuad(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t + b;
         return -c / 2 * ((--t) * (t - 2) - 1) + b;
     },
-    easeInCubic: function (t, b, c, d) {
+    easeInCubic(t, b, c, d) {
         return c * (t /= d) * t * t + b;
     },
-    easeOutCubic: function (t, b, c, d) {
+    easeOutCubic(t, b, c, d) {
         return c * ((t = t / d - 1) * t * t + 1) + b;
     },
-    easeInOutCubic: function (t, b, c, d) {
+    easeInOutCubic(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t * t + b;
         return c / 2 * ((t -= 2) * t * t + 2) + b;
     },
-    easeInQuart: function (t, b, c, d) {
+    easeInQuart(t, b, c, d) {
         return c * (t /= d) * t * t * t + b;
     },
-    easeOutQuart: function (t, b, c, d) {
+    easeOutQuart(t, b, c, d) {
         return -c * ((t = t / d - 1) * t * t * t - 1) + b;
     },
-    easeInOutQuart: function (t, b, c, d) {
+    easeInOutQuart(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t * t * t + b;
         return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
     },
-    easeInQuint: function (t, b, c, d) {
+    easeInQuint(t, b, c, d) {
         return c * (t /= d) * t * t * t * t + b;
     },
-    easeOutQuint: function (t, b, c, d) {
+    easeOutQuint(t, b, c, d) {
         return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
     },
-    easeInOutQuint: function (t, b, c, d) {
+    easeInOutQuint(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
         return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
     },
-    easeInSine: function (t, b, c, d) {
+    easeInSine(t, b, c, d) {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     },
-    easeOutSine: function (t, b, c, d) {
+    easeOutSine(t, b, c, d) {
         return c * Math.sin(t / d * (Math.PI / 2)) + b;
     },
-    easeInOutSine: function (t, b, c, d) {
+    easeInOutSine(t, b, c, d) {
         return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
     },
-    easeInExpo: function (t, b, c, d) {
+    easeInExpo(t, b, c, d) {
         return (t == 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
     },
-    easeOutExpo: function (t, b, c, d) {
+    easeOutExpo(t, b, c, d) {
         return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
     },
-    easeInOutExpo: function (t, b, c, d) {
+    easeInOutExpo(t, b, c, d) {
         if (t == 0) return b;
         if (t == d) return b + c;
         if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
         return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
     },
-    easeInCirc: function (t, b, c, d) {
+    easeInCirc(t, b, c, d) {
         return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
     },
-    easeOutCirc: function (t, b, c, d) {
+    easeOutCirc(t, b, c, d) {
         return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
     },
-    easeInOutCirc: function (t, b, c, d) {
+    easeInOutCirc(t, b, c, d) {
         if ((t /= d / 2) < 1) return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
         return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
     },
-    easeInElastic: function (t, b, c, d) {
+    easeInElastic(t, b, c, d) {
         var s = 1.70158; var p = 0; var a = c;
         if (t == 0) return b; if ((t /= d) == 1) return b + c; if (!p) p = d * .3;
         if (a < Math.abs(c)) { a = c; var s = p / 4; }
         else var s = p / (2 * Math.PI) * Math.asin(c / a);
         return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
     },
-    easeOutElastic: function (t, b, c, d) {
+    easeOutElastic(t, b, c, d) {
         var s = 1.70158; var p = 0; var a = c;
         if (t == 0) return b; if ((t /= d) == 1) return b + c; if (!p) p = d * .3;
         if (a < Math.abs(c)) { a = c; var s = p / 4; }
         else var s = p / (2 * Math.PI) * Math.asin(c / a);
         return a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
     },
-    easeInOutElastic: function (t, b, c, d) {
+    easeInOutElastic(t, b, c, d) {
         var s = 1.70158; var p = 0; var a = c;
         if (t == 0) return b; if ((t /= d / 2) == 2) return b + c; if (!p) p = d * (.3 * 1.5);
         if (a < Math.abs(c)) { a = c; var s = p / 4; }
@@ -654,10 +654,10 @@ const easingFunctions = {
     //     if ((t /= d / 2) < 1) return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;
     //     return c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
     // },
-    easeInBounce: function (t, b, c, d) {
+    easeInBounce(t, b, c, d) {
         return c - easingFunctions.easeOutBounce(d - t, 0, c, d) + b;
     },
-    easeOutBounce: function (t, b, c, d) {
+    easeOutBounce(t, b, c, d) {
         if ((t /= d) < (1 / 2.75)) {
             return c * (7.5625 * t * t) + b;
         } else if (t < (2 / 2.75)) {
@@ -668,7 +668,7 @@ const easingFunctions = {
             return c * (7.5625 * (t -= (2.625 / 2.75)) * t + .984375) + b;
         }
     },
-    easeInOutBounce: function (t, b, c, d) {
+    easeInOutBounce(t, b, c, d) {
         if (t < d / 2) return easingFunctions.easeInBounce(t * 2, 0, c, d) * .5 + b;
         return easingFunctions.easeOutBounce(t * 2 - d, 0, c, d) * .5 + c * .5 + b;
     }
