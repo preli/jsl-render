@@ -9,7 +9,6 @@ import { refresh } from "../src/render";
 import { ImmutableComponent } from "./components/ImmutableComponent";
 
 
-
 // tests rendering of a single VNode and that children should have presedence over content
 function test01() {
     const node = { tag: "div", contet: "Hello world", children: [{ tag: "span", content: "Heho" }] };
@@ -17,7 +16,6 @@ function test01() {
     render.render(node);
     compareResult("01", "test01");
 }
-
 clear();
 console.time("test01");
 test01();
@@ -389,4 +387,3 @@ testLast();
 //       #) event handler testen und ob refresh danach aufgerufen wird
 //       +) Test onInit
 //       +) Test were children of a component are "manually" removed
-
