@@ -602,16 +602,16 @@ const easingFunctions = {
         if ((t /= d / 2) < 1) return c / 2 * t * t * t * t + b;
         return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
     },
-    easeInQuint(t, b, c, d) {
-        return c * (t /= d) * t * t * t * t + b;
-    },
-    easeOutQuint(t, b, c, d) {
-        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
-    },
-    easeInOutQuint(t, b, c, d) {
-        if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
-        return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
-    },
+    // easeInQuint(t, b, c, d) {
+    //     return c * (t /= d) * t * t * t * t + b;
+    // },
+    // easeOutQuint(t, b, c, d) {
+    //     return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    // },
+    // easeInOutQuint(t, b, c, d) {
+    //     if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
+    //     return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+    // },
     easeInSine(t, b, c, d) {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     },
@@ -633,16 +633,16 @@ const easingFunctions = {
         if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
         return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
     },
-    easeInCirc(t, b, c, d) {
-        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
-    },
-    easeOutCirc(t, b, c, d) {
-        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
-    },
-    easeInOutCirc(t, b, c, d) {
-        if ((t /= d / 2) < 1) return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
-        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
-    },
+    // easeInCirc(t, b, c, d) {
+    //     return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+    // },
+    // easeOutCirc(t, b, c, d) {
+    //     return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+    // },
+    // easeInOutCirc(t, b, c, d) {
+    //     if ((t /= d / 2) < 1) return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+    //     return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+    // },
     easeInElastic(t, b, c, d) {
         var s = 1.70158; var p = 0; var a = c;
         if (t == 0) return b; if ((t /= d) == 1) return b + c; if (!p) p = d * .3;
