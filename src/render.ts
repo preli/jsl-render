@@ -539,7 +539,31 @@ function addStep(animation: IJSLAnimation, status: { current: any, start: number
         value = easingFnc(status.now - status.start, parseFloat(animation.from), parseFloat(animation.to) - parseFloat(animation.from), duration);
         status.current = value + (status.current.toString().replace(/[0-9.-]/g, ""));
     }
-    // TODO: not supported -> example colors
+
+    if (status.current && status.current[0] === "#") {
+        // color
+        const rval = parseInt(animation.from.substr(1, 2), 16);
+        const gval = parseInt(animation.from.substr(3, 2), 16);
+        const bval = parseInt(animation.from.substr(5, 2), 16);
+        const rval2 = parseInt(animation.to.substr(1, 2), 16);
+        const gval2 = parseInt(animation.to.substr(3, 2), 16);
+        const bval2 = parseInt(animation.to.substr(5, 2), 16);
+        const rval3 = easingFnc(status.now - status.start, rval, rval2 - rval, duration);
+        const gval3 = easingFnc(status.now - status.start, gval, gval2 - gval, duration);
+        const bval3 = easingFnc(status.now - status.start, bval, bval2 - bval, duration);
+        status.current = "#" + padLeft(Math.round(rval3).toString(16), "0", 2) + padLeft(Math.round(gval3).toString(16), "0", 2) +
+            padLeft(Math.round(bval3).toString(16), "0", 2);
+    }
+
+    // TODO: not supported -> for example color in other format than '#xxxxxx' or anything that does not start with a number
+}
+
+function padLeft(str: string, padStr: string, minLength: number): string {
+    let result = str;
+    while (result.length < minLength) {
+        result = padStr + result;
+    }
+    return result;
 }
 
 // t: current time, b: begInnIng value, c: change In value, d: duration

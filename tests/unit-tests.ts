@@ -9,7 +9,7 @@ import { refresh } from "../src/render";
 import { ImmutableComponent } from "./components/ImmutableComponent";
 
 
-
+console.log(parseFloat("#ff0000"));
 // tests rendering of a single VNode and that children should have presedence over content
 function test01() {
     const animation: IJSLAnimation[] = [{
@@ -17,14 +17,25 @@ function test01() {
         from: "0rem",
         to: "60rem",
         easing: "easeOutQuad",
-        duration: 1800,
-        delay: 1000
-    }, {
-        attr: "border-radius",
-        from: "0px",
-        to: "12px",
-        duration: 1000,
-        delay: 1800
+        duration: 1800
+    },
+    // {
+    //     attr: "opacity",
+    //     from: "0",
+    //     to: "1",
+    //     duration: 1000
+    // },
+    {
+        attr: "background",
+        from: "#ffffff",
+        to: "#ff0000",
+        duration: 2000
+    },
+    {
+        attr: "color",
+        from: "#000000",
+        to: "#ffffff",
+        duration: 2000
     }];
     const node = { tag: "div", contet: "Hello world", animation, attr: {style: {background: "red", padding: "1rem", height: "40px"}}, children: [{ tag: "span", content: "Heho" }] };
     const render = getRenderer();
