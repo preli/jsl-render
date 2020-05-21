@@ -1,7 +1,7 @@
 # JSL-Render
-JSL-Render is a lightweight and fast virtual dom render engine für building modern HTML5 applications.
+JSL-Render is a lightweight and fast virtual dom render engine für building modern HTML5 applications. Since version 3.4 it supports animations out of the box.
 
-Size: < 3kb minified and gzipped
+Size: < 3.5kb minified and gzipped
 
 Browser Support: Chrome, Firefox, Edge, Internet Explorer 10+
 
