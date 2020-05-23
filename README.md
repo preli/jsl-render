@@ -22,7 +22,6 @@ view.render({
 
 ### JSL-Render also support JSX / TSX Syntax
 
-
 ```typescript
 const view = new JSLRender(document.body);
 
@@ -33,7 +32,7 @@ view.render(<h1>hello world</h1>);
 
 ### Install
 
-```
+```typescript
 npm install jsl-render
 ```
 
