@@ -26,6 +26,9 @@ export function h(componentOrTag: string | IJSLComponent, attr, ...children) {
             }
         }
     }
+    if (result.attr && result.attr.animation) {
+        result.animation = result.attr.animation;
+    }
     return result;
 }
 

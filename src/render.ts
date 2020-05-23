@@ -1,8 +1,6 @@
 import { IJSLComponent, IJSLVNode, IJSLAnimation } from "./interfaces";
 
-const MaxReorderChildren = 1000;
 
-const DEFAULT_ANIMATION_DURATION = 500;
 
 export function refresh() {
     if (JSLRender.lastCreatedRenderer != null) {
@@ -108,7 +106,23 @@ function areAttributesEqual(attr, v, a): boolean {
 
 export class JSLRender {
 
+    public static MaxReorderChildren = 1000;
+
+    public static DefaultAnimationDuration = 500;
+
     public static lastCreatedRenderer: JSLRender = null;
+
+    public static PrintRenderTime = true;
+
+    public static animate(vnode: IJSLVNode, animation: IJSLAnimation | IJSLAnimation[]): void {
+        if (Array.isArray(animation)) {
+            for (let i = 0; i < animation.length; i++) {
+                JSLRender.animateSingle(vnode, animation[i]);
+            }
+        } else {
+            JSLRender.animateSingle(vnode, animation);
+        }
+    }
 
     private renderedVNode: IJSLVNode;
 
@@ -123,12 +137,16 @@ export class JSLRender {
     }
 
     public render(node?: IJSLVNode | IJSLComponent): void {
-        // tslint:disable-next-line: no-console
-        console.time("JSL render");
+        if (JSLRender.PrintRenderTime) {
+            // tslint:disable-next-line: no-console
+            console.time("JSL render");
+        }
         this.rootNode = node || this.rootNode;
         this.renderVNode(this.container, this.rootNode);
-        // tslint:disable-next-line: no-console
-        console.timeEnd("JSL render");
+        if (JSLRender.PrintRenderTime) {
+            // tslint:disable-next-line: no-console
+            console.timeEnd("JSL render");
+        }
     }
 
     public refresh(): void {
@@ -200,7 +218,7 @@ export class JSLRender {
             (node as IJSLComponent).onCreate.call(node, vnode);
         }
         if (vnode.animation != null) {
-            this.animate(vnode, vnode.animation);
+            JSLRender.animate(vnode, vnode.animation);
         }
         return vnode;
     }
@@ -330,7 +348,7 @@ export class JSLRender {
     }
 
     private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
-        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length <= MaxReorderChildren) {
+        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length <= JSLRender.MaxReorderChildren) {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;
@@ -482,17 +500,7 @@ export class JSLRender {
         }
     }
 
-    private animate(vnode: IJSLVNode, animation: IJSLAnimation | IJSLAnimation[]): void {
-        if (Array.isArray(animation)) {
-            for (let i = 0; i < animation.length; i++) {
-                this.animateSingle(vnode, animation[i]);
-            }
-        } else {
-            this.animateSingle(vnode, animation);
-        }
-    }
-
-    private animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
+    private static animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
 
         const status = { current: animation.from, timeout: 20, start: 0, now: 0 };
         if (vnode.attr.style == null) {
@@ -504,12 +512,34 @@ export class JSLRender {
                 status.start = status.now;
             }
             addStep(animation, status);
-            const done = status.now - status.start >= animation.duration ?? DEFAULT_ANIMATION_DURATION;
+            const done = status.now - status.start >= (animation.duration ?? JSLRender.DefaultAnimationDuration);
             if (done) {
                 status.current = animation.to;
             }
-            // TODO: test if style is a string
-            vnode.attr.style[animation.attr] = status.current;
+            if (typeof vnode.attr.style === "string") {
+                const parts = vnode.attr.style.split(";");
+                vnode.attr.style = "";
+                let found = false;
+                for (let i = 0; i < parts; i++) {
+                    const entry = parts[i].split(":");
+                    if (entry.length === 2) {
+                        const key = entry[0];
+                        let value = entry[1];
+                        if (key.trim() === animation.attr) {
+                            found = true;
+                            value = status.current;
+                        }
+                        vnode.attr.style += key + ":" + value + ";";
+                    } else {
+                        vnode.attr.style += parts[i] + ";";
+                    }
+                }
+                if (!found) {
+                    vnode.attr.style += animation.attr + ":" + status.current;
+                }
+            } else {
+                vnode.attr.style[animation.attr] = status.current;
+            }
             vnode.dom.style[animation.attr] = status.current;
             if (!done) {
                 requestAnimationFrame(fnc);
@@ -528,7 +558,7 @@ function addStep(animation: IJSLAnimation, status: { current: any, start: number
     if (easingFnc == null) {
         throw new Error("easing function " + animation.easing + " does not exist");
     }
-    const duration = animation.duration ?? DEFAULT_ANIMATION_DURATION;
+    const duration = animation.duration ?? JSLRender.DefaultAnimationDuration;
 
     if (typeof status.current === "number") {
         status.current = easingFnc(status.now - status.start, animation.from, animation.to - animation.from, duration);
