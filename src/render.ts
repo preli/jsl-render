@@ -124,6 +124,58 @@ export class JSLRender {
         }
     }
 
+    private static animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
+
+        const status = { current: animation.from, timeout: 20, start: 0, now: 0 };
+        if (vnode.attr.style == null) {
+            vnode.attr.style = {};
+        }
+        const fnc = () => {
+            status.now = performance.now();
+            if (!status.start) {
+                status.start = status.now;
+            }
+            addStep(animation, status);
+            const done = status.now - status.start >= (animation.duration ?? JSLRender.DefaultAnimationDuration);
+            if (done) {
+                status.current = animation.to;
+            }
+            if (typeof vnode.attr.style === "string") {
+                const parts = vnode.attr.style.split(";");
+                vnode.attr.style = "";
+                let found = false;
+                for (let i = 0; i < parts; i++) {
+                    const entry = parts[i].split(":");
+                    if (entry.length === 2) {
+                        const key = entry[0];
+                        let value = entry[1];
+                        if (key.trim() === animation.attr) {
+                            found = true;
+                            value = status.current;
+                        }
+                        vnode.attr.style += key + ":" + value + ";";
+                    } else {
+                        vnode.attr.style += parts[i] + ";";
+                    }
+                }
+                if (!found) {
+                    vnode.attr.style += animation.attr + ":" + status.current;
+                }
+            } else {
+                vnode.attr.style[animation.attr] = status.current;
+            }
+            vnode.dom.style[animation.attr] = status.current;
+            if (!done) {
+                requestAnimationFrame(fnc);
+            }
+        };
+        if (animation.delay) {
+            setTimeout(fnc, animation.delay);
+        } else {
+            fnc();
+        }
+    }
+
     private renderedVNode: IJSLVNode;
 
     private rootNode: IJSLVNode | IJSLComponent;
@@ -497,58 +549,6 @@ export class JSLRender {
             } else {
                 vnode.dom.removeAttribute(attr);
             }
-        }
-    }
-
-    private static animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
-
-        const status = { current: animation.from, timeout: 20, start: 0, now: 0 };
-        if (vnode.attr.style == null) {
-            vnode.attr.style = {};
-        }
-        const fnc = () => {
-            status.now = performance.now();
-            if (!status.start) {
-                status.start = status.now;
-            }
-            addStep(animation, status);
-            const done = status.now - status.start >= (animation.duration ?? JSLRender.DefaultAnimationDuration);
-            if (done) {
-                status.current = animation.to;
-            }
-            if (typeof vnode.attr.style === "string") {
-                const parts = vnode.attr.style.split(";");
-                vnode.attr.style = "";
-                let found = false;
-                for (let i = 0; i < parts; i++) {
-                    const entry = parts[i].split(":");
-                    if (entry.length === 2) {
-                        const key = entry[0];
-                        let value = entry[1];
-                        if (key.trim() === animation.attr) {
-                            found = true;
-                            value = status.current;
-                        }
-                        vnode.attr.style += key + ":" + value + ";";
-                    } else {
-                        vnode.attr.style += parts[i] + ";";
-                    }
-                }
-                if (!found) {
-                    vnode.attr.style += animation.attr + ":" + status.current;
-                }
-            } else {
-                vnode.attr.style[animation.attr] = status.current;
-            }
-            vnode.dom.style[animation.attr] = status.current;
-            if (!done) {
-                requestAnimationFrame(fnc);
-            }
-        };
-        if (animation.delay) {
-            setTimeout(fnc, animation.delay);
-        } else {
-            fnc();
         }
     }
 }
