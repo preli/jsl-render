@@ -106,7 +106,7 @@ function areAttributesEqual(attr, v, a): boolean {
 
 export class JSLRender {
 
-    public static MaxReorderChildren = 1000;
+    public static MaxReorderChildren = 500;
 
     public static DefaultAnimationDuration = 500;
 
@@ -194,7 +194,9 @@ export class JSLRender {
             console.time("JSL render");
         }
         this.rootNode = node || this.rootNode;
-        this.renderVNode(this.container, this.rootNode);
+        if (this.rootNode != null) {
+            this.renderVNode(this.container, this.rootNode);
+        }
         if (JSLRender.PrintRenderTime) {
             // tslint:disable-next-line: no-console
             console.timeEnd("JSL render");
@@ -232,7 +234,7 @@ export class JSLRender {
             if ((node as IJSLComponent).onInit) { // if (replaceWith == null && (node as IJSLComponent).onInit) {
                 (node as IJSLComponent).onInit.call(node, this);
             }
-            vnode = (node as IJSLComponent).render();
+            vnode = this.cloneVNode((node as IJSLComponent).render());
         } else {
             // we have a vNode
             vnode = this.cloneVNode(node as IJSLVNode);
@@ -283,7 +285,8 @@ export class JSLRender {
             dom: vnode.dom,
             raw: vnode.raw,
             content: vnode.content,
-            animation: vnode.animation
+            animation: vnode.animation,
+            noReorder: vnode.noReorder
         };
     }
 
@@ -317,6 +320,9 @@ export class JSLRender {
                     if (!areEqual(node as IJSLComponent, oldComponent)) {
                         recreateNode = true;
                     }
+                    if ((node as any).__proto__ === (oldComponent as any).__proto__) {
+                        (node as any).State = (oldComponent as any).State;
+                    }
                 }
                 if (recreateNode) {
                     this.callRemoveEvents(renderedNode, true);
@@ -327,7 +333,7 @@ export class JSLRender {
         }
 
         if (isComp) {
-            vnode = (node as IJSLComponent).render();
+            vnode = this.cloneVNode((node as IJSLComponent).render());
         } else {
             // we have a vNode
             vnode = this.cloneVNode(node as IJSLVNode);
@@ -400,7 +406,7 @@ export class JSLRender {
     }
 
     private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
-        if (renderedNode.children.length > 0 && vnode.children.length > 0 && vnode.children.length <= JSLRender.MaxReorderChildren) {
+        if (renderedNode.children.length > 1 && vnode.children.length > 1 && vnode.children.length <= JSLRender.MaxReorderChildren && !vnode.noReorder) {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;

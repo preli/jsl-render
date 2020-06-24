@@ -17,6 +17,7 @@ export interface IJSLVNode {
     raw?: boolean;
     dom?: HTMLElement;
     animation?: IJSLAnimation | IJSLAnimation[];
+    noReorder?: boolean;
 }
 
 export interface IJSLComponent {
