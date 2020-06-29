@@ -285,8 +285,7 @@ export class JSLRender {
             dom: vnode.dom,
             raw: vnode.raw,
             content: vnode.content,
-            animation: vnode.animation,
-            noReorder: vnode.noReorder
+            animation: vnode.animation
         };
     }
 
@@ -406,7 +405,7 @@ export class JSLRender {
     }
 
     private tryToReorderChildren(renderedNode: IJSLVNode, vnode: IJSLVNode): void {
-        if (renderedNode.children.length > 1 && vnode.children.length > 1 && vnode.children.length <= JSLRender.MaxReorderChildren && !vnode.noReorder) {
+        if (renderedNode.children.length > 1 && vnode.children.length > 1 && vnode.children.length <= JSLRender.MaxReorderChildren) {
             let idx: number;
             let l: number;
             let anyMatchesFound = false;
