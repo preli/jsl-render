@@ -297,7 +297,7 @@ export class JSLRender {
     }
 
     private updateNode(renderedNode: IJSLVNode, node: IJSLVNode | IJSLComponent): IJSLVNode {
-        if (renderedNode.dom.parentElement == null) {
+        if (renderedNode.dom == null || renderedNode.dom.parentElement == null) {
             // does not exist anymore
             // -> was probably modified outside of jsl-render code
             // -> needs to be removed now, so return undefined
