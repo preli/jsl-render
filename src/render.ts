@@ -355,6 +355,11 @@ export class JSLRender {
         if ((contentChanged || attributesChanged) && isComp && (node as IJSLComponent).onUpdate) {
             (node as IJSLComponent).onUpdate.call(node, vnode);
         }
+        
+        if (renderedNode.animation == null && vnode.animation != null) {
+            JSLRender.animate(vnode, vnode.animation);
+        }
+
         return vnode;
     }
 

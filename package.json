@@ -1,6 +1,6 @@
 {
   "name": "jsl-render",
-  "version": "3.6.2",
+  "version": "3.6.3",
   "description": "virtual dom render engine",
   "main": "lib/index.js",
   "files": [
