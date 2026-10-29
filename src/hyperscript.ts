@@ -32,6 +32,14 @@ export function h(componentOrTag: string | IJSLComponent, attr, ...children) {
     return result;
 }
 
+export declare namespace h {
+    namespace JSX {
+        interface IntrinsicElements {
+            [tagName: string]: any;
+        }
+    }
+}
+
 export let React = {
     createElement: h
 };

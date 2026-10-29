@@ -124,6 +124,12 @@ export class JSLRender {
         }
     }
 
+    public static toHTMLString(vnode: IJSLVNode | IJSLComponent): string {
+        const dom = document.createElement("div");
+        new JSLRender(dom, false).render(vnode);
+        return dom.innerHTML;
+    }
+
     private static animateSingle(vnode: IJSLVNode, animation: IJSLAnimation) {
 
         const status = { current: animation.from, timeout: 20, start: 0, now: 0 };

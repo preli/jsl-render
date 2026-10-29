@@ -1,6 +1,6 @@
 {
   "name": "jsl-render",
-  "version": "3.6.3",
+  "version": "3.8.0",
   "description": "virtual dom render engine",
   "main": "lib/index.js",
   "files": [
@@ -12,6 +12,6 @@
   "author": "Philipp P.",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^3.7.5"
+    "typescript": "5.9.3"
   }
 }
