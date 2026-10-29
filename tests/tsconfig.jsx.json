@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "es6",
+        "moduleResolution": "node",
+        "jsx": "react",
+        "jsxFactory": "h",
+        "strict": true,
+        "noEmit": true,
+        "types": [],
+        "baseUrl": ".",
+        "paths": {
+            "jsl-render": ["../lib/index.d.ts"]
+        }
+    },
+    "files": ["jsx-types.tsx"]
+}

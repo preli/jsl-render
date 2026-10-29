@@ -240,6 +240,51 @@ function test09() {
 clear();
 test09();
 
+function testBooleanAttributes() {
+    const attributes = [
+        "allowfullscreen", "async", "autofocus", "autoplay", "checked", "controls",
+        "default", "defer", "disabled", "formnovalidate", "inert", "ismap", "itemscope",
+        "loop", "multiple", "muted", "nomodule", "novalidate", "open", "playsinline",
+        "readonly", "required", "reversed", "selected"
+    ];
+    const render = getRenderer();
+    const node: IJSLVNode = { tag: "div", attr: { disabled: false, required: true } };
+    render.render(node);
+    const dom = document.querySelector("#main div");
+    assert(!dom.hasAttribute("disabled"), "initial disabled false removes the attribute");
+    assert(dom.getAttribute("required") === "", "initial required true adds the attribute");
+
+    for (const attr of attributes) {
+        node.attr[attr] = true;
+        render.render(node);
+        assert(dom.getAttribute(attr) === "", attr + " true adds an empty attribute");
+        node.attr[attr] = false;
+        render.render(node);
+        assert(!dom.hasAttribute(attr), attr + " false removes the attribute");
+        node.attr[attr] = true;
+        render.render(node);
+        assert(dom.getAttribute(attr) === "", attr + " can be re-enabled");
+    }
+
+    for (const value of [0, 1, "yes", "no", "", "false"]) {
+        node.attr.disabled = value;
+        render.render(node);
+        assert(dom.getAttribute("disabled") === String(value), "disabled preserves " + JSON.stringify(value));
+    }
+
+    node.attr.hidden = false;
+    node.attr.draggable = false;
+    node.attr["aria-expanded"] = false;
+    node.attr["data-active"] = false;
+    render.render(node);
+    for (const attr of ["hidden", "draggable", "aria-expanded", "data-active"]) {
+        assert(dom.getAttribute(attr) === "false", attr + " preserves boolean false");
+    }
+}
+
+clear();
+testBooleanAttributes();
+
 
 // tests raw vs escaped
 function test10() {
