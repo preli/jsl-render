@@ -1,4 +1,14 @@
-import { IJSLComponent, IJSLVNode } from "./interfaces";
+import { IJSLAnimation, IJSLComponent, IJSLVNode } from "./interfaces";
+
+export type JSLEventHandlers = {
+    [K in keyof HTMLElementEventMap]?: ((event: HTMLElementEventMap[K], vnode: IJSLVNode) => unknown) | null;
+};
+
+export type JSLAttributes = JSLEventHandlers & {
+    style?: string | { [property: string]: string | number | null | undefined } | null;
+    animation?: IJSLAnimation | IJSLAnimation[] | null;
+    [attribute: string]: any;
+};
 
 export function h(componentOrTag: string | IJSLComponent, attr, ...children) {
     if ((componentOrTag as any).render != null) {
@@ -35,7 +45,7 @@ export function h(componentOrTag: string | IJSLComponent, attr, ...children) {
 export declare namespace h {
     namespace JSX {
         interface IntrinsicElements {
-            [tagName: string]: any;
+            [tagName: string]: JSLAttributes;
         }
     }
 }

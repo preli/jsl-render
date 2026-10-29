@@ -1,5 +1,12 @@
 import { IJSLComponent, IJSLVNode, IJSLAnimation } from "./interfaces";
 
+const booleanAttributes = [
+    "allowfullscreen", "async", "autofocus", "autoplay", "checked", "controls",
+    "default", "defer", "disabled", "formnovalidate", "inert", "ismap", "itemscope",
+    "loop", "multiple", "muted", "nomodule", "novalidate", "open", "playsinline",
+    "readonly", "required", "reversed", "selected"
+];
+
 
 
 export function refresh() {
@@ -551,6 +558,14 @@ export class JSLRender {
             vnode.dom["_" + attr + "_"] = eventHandler;
         } else {
             let value = vnode.attr[attr];
+            if (typeof value === "boolean" && booleanAttributes.indexOf(attr.toLowerCase()) !== -1) {
+                if (value) {
+                    vnode.dom.setAttribute(attr, "");
+                } else {
+                    vnode.dom.removeAttribute(attr);
+                }
+                return;
+            }
             if (attr === "style" && typeof value === "object") {
                 let s = "";
                 for (const style in value) {
